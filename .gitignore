@@ -1,6 +1,11 @@
 # o site e gerado pelo build
 site/
 
+# NUNCA commitar: tem o nome COMPLETO de alunos menores de idade, e este
+# repositorio e publico. E gerado do banco quando precisar:
+#   python ferramentas/importar_alunos.py --escola "Ismael"
+alunos.json
+
 # saida do pygbag dentro das pastas dos jogos
 build/
 *.apk

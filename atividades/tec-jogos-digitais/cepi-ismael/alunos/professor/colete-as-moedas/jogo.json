@@ -1,0 +1,8 @@
+{
+  "titulo": "Colete as moedas",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "pygame",
+  "descricao": "Modelo em Python/pygame compilado para o navegador com pygbag. Mesmo jogo da versao HTML, para comparar as duas engines.",
+  "controles": "Setas ou WASD para mover. R para recomecar."
+}

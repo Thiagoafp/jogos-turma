@@ -1,9 +1,9 @@
 {
   "titulo": "Desvie dos blocos",
-  "autor": "Exemplo da turma",
+  "autor": "Professor",
   "turma": "2026/1",
   "engine": "html",
-  "descricao": "Exemplo em HTML/JavaScript. Pegue as moedas amarelas e desvie dos blocos vermelhos que caem cada vez mais rapido.",
+  "descricao": "Modelo em HTML/JavaScript. Pegue as moedas amarelas e desvie dos blocos vermelhos que caem cada vez mais rapido.",
   "controles": "Setas ou WASD para mover. R para recomecar.",
   "midia": [
     {

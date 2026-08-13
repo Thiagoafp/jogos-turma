@@ -106,16 +106,18 @@ def carregar_alunos() -> list[dict]:
                     dados["pasta"] = pasta
                     jogos.append(dados)
 
-                if not jogos:
-                    continue
-
+                # Aluno sem jogo ainda continua na lista: a turma inteira
+                # aparece desde o primeiro dia, cada um com seu estudio vazio
+                # esperando ser preenchido.
                 jogos.sort(key=lambda j: str(j.get("titulo", "")).lower())
                 nome = ficha.get("nome", dir_aluno.name)
                 alunos.append({
                     "slug": dir_aluno.name,
                     "pasta": dir_aluno,
                     "nome": nome,
-                    "turma": ficha.get("turma", escola.get("turma", "")),
+                    # `or` e nao get(default): o criar_estudios grava "" para
+                    # o aluno preencher, e "" precisa cair no valor da escola
+                    "turma": ficha.get("turma") or escola.get("turma", ""),
                     # identidade do estudio, configurada pelo proprio aluno
                     "estudio": ficha.get("estudio", "") or f"Estudio {nome}",
                     "lema": ficha.get("lema", ""),
@@ -350,6 +352,16 @@ header.topo p { margin: .9rem 0 0; color: var(--suave); font-size: .9rem; }
   padding: .6rem; border-radius: 2px;
 }
 .carta:hover .jogar { background: var(--neon); }
+
+/* estudio ainda sem jogo: presente na lista, mas discreto */
+.carta.sem-jogo { opacity: .62; }
+.carta.sem-jogo:hover { opacity: 1; }
+.jogar.apagado {
+  background: transparent; color: var(--suave);
+  border: 1px solid var(--borda);
+}
+.carta:hover .jogar.apagado { background: transparent; color: var(--neon);
+                              border-color: var(--neon); }
 
 /* abertura do estudio */
 .hero {
@@ -651,17 +663,28 @@ def montar_indice(alunos: list[dict]) -> str:
                 if banner
                 else f"background:linear-gradient(135deg,{a},{b})"
             )
+            if n:
+                descricao = esc(aluno["lema"]) or (
+                    f'{n} {"jogo" if n == 1 else "jogos"} publicado'
+                    f'{"" if n == 1 else "s"}.'
+                )
+                botao = f'<div class="jogar">Ver os {n} {"jogo" if n == 1 else "jogos"}</div>'
+                vazio = ""
+            else:
+                descricao = "Estudio aberto, primeiro jogo a caminho."
+                botao = '<div class="jogar apagado">Ainda sem jogo</div>'
+                vazio = " sem-jogo"
+
             secoes.append(f"""
-      <a class="carta" href="{esc(caminho_do_aluno(aluno))}/">
+      <a class="carta{vazio}" href="{esc(caminho_do_aluno(aluno))}/">
         <div class="capa capa-estudio" style="{fundo}">
           {avatar_html(aluno, "", "avatar-mini")}
         </div>
         <div class="corpo">
           <h3>{esc(aluno["estudio"])}</h3>
           <div class="autor">{esc(aluno["nome"])} &middot; {esc(aluno["turma"])}</div>
-          <p class="desc">{esc(aluno["lema"]) or
-             f'{n} {"jogo" if n == 1 else "jogos"} publicado{"" if n == 1 else "s"}.'}</p>
-          <div class="jogar">Ver os {n} {"jogo" if n == 1 else "jogos"}</div>
+          <p class="desc">{descricao}</p>
+          {botao}
         </div>
       </a>""")
         secoes.append("</div></section>")
@@ -747,7 +770,8 @@ def montar_loja(aluno: dict) -> str:
   <section class="secao">
     <h2>Jogos do estudio</h2>
     <p class="sub">{n} {"titulo" if n == 1 else "titulos"} publicado{"" if n == 1 else "s"}</p>
-    <div class="grade">{"".join(cartas)}</div>
+    {f'<div class="grade">{"".join(cartas)}</div>' if cartas else
+     '<p class="vazio">Este estudio ainda nao publicou nenhum jogo.</p>'}
   </section>
 </div>
 <footer><a href="{prefixo}index.html">Voltar para a lista de estudios</a></footer>
@@ -848,20 +872,19 @@ def construir(pular_pygame: bool = False) -> int:
             )
             jogos_ok.append(jogo)
 
-        if jogos_ok:
-            visivel = dict(aluno, jogos=jogos_ok)
-            base.mkdir(parents=True, exist_ok=True)
+        # A pagina do aluno sai mesmo sem jogo: o estudio existe, so esta
+        # vazio. Sem isso o card da home levaria a um 404.
+        visivel = dict(aluno, jogos=jogos_ok)
+        base.mkdir(parents=True, exist_ok=True)
 
-            # avatar e banner do estudio, quando o aluno configurou
-            for campo in ("avatar", "banner"):
-                destino_rel = arquivo_estudio(aluno, campo)
-                if destino_rel:
-                    shutil.copy2(
-                        aluno["pasta"] / aluno[campo], SAIDA / destino_rel
-                    )
+        # avatar e banner do estudio, quando o aluno configurou
+        for campo in ("avatar", "banner"):
+            destino_rel = arquivo_estudio(aluno, campo)
+            if destino_rel:
+                shutil.copy2(aluno["pasta"] / aluno[campo], SAIDA / destino_rel)
 
-            (base / "index.html").write_text(montar_loja(visivel), encoding="utf-8")
-            publicados.append(visivel)
+        (base / "index.html").write_text(montar_loja(visivel), encoding="utf-8")
+        publicados.append(visivel)
 
     (SAIDA / "index.html").write_text(montar_indice(publicados), encoding="utf-8")
     # o GitHub Pages ignora pastas iniciadas por _ sem este arquivo

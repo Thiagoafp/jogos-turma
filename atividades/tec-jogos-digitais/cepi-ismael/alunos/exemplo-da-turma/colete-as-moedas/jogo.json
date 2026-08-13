@@ -1,8 +1,0 @@
-{
-  "titulo": "Colete as moedas",
-  "autor": "Exemplo da turma",
-  "turma": "2026/1",
-  "engine": "pygame",
-  "descricao": "Exemplo em Python/pygame compilado para o navegador com pygbag. Mesmo jogo da versao HTML, para comparar as duas engines.",
-  "controles": "Setas ou WASD para mover. R para recomecar."
-}

@@ -58,7 +58,7 @@ Formatos aceitos: `.png`, `.jpg`, `.webp` e `.svg`, até 4 MB cada. Os arquivos
 ficam na **sua pasta de estúdio**, não dentro da pasta de um jogo.
 
 Dá para desenhar o avatar no próprio Construct, no Piskel ou em qualquer
-editor de pixel art. Veja `alunos/exemplo-da-turma/` — o avatar e o banner de
+editor de pixel art. Veja `alunos/professor/` — o avatar e o banner de
 lá são SVG feitos à mão, e você pode abrir para ver como foram montados.
 
 ## A ficha de cada jogo
