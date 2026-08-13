@@ -1,0 +1,8 @@
+{
+  "titulo": "Cobrinha",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "A cobrinha clássica em alta resolução, feita com TypeScript e Phaser 3. Esta é a versão de um jogador: o modo em rede para a turma inteira precisa do servidor ligado.",
+  "controles": "Setas ou WASD para mover. Espaço ou Esc para pausar."
+}

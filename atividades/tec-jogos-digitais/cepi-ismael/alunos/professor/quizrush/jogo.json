@@ -1,0 +1,10 @@
+{
+  "titulo": "QuizRush",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "link",
+  "url": "https://EXEMPLO-TROCAR.onrender.com",
+  "descricao": "Quiz ao vivo no estilo Kahoot: o professor abre a sala num projetor e a turma entra pelo celular com um PIN de seis digitos. Pontua por acerto e por velocidade.",
+  "controles": "Abra no celular, digite o PIN da sala e responda antes do tempo acabar.",
+  "capa": "capa.svg"
+}

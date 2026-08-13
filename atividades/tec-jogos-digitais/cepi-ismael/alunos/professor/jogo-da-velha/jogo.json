@@ -1,0 +1,8 @@
+{
+  "titulo": "Jogo da Velha",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Voce e o X contra a maquina. Ela ganha se puder, bloqueia se precisar e prefere o centro - o empate e o melhor que da para tirar dela.",
+  "controles": "Clique numa casa vazia."
+}

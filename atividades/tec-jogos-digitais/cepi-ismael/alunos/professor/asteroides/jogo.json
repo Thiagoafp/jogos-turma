@@ -1,0 +1,8 @@
+{
+  "titulo": "Asteroides",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Classico de 1979: gire, acelere e atire. Cada pedra grande se parte em duas menores, entao a tela fica mais cheia antes de esvaziar.",
+  "controles": "Setas giram e aceleram. Espaco atira. R reinicia."
+}

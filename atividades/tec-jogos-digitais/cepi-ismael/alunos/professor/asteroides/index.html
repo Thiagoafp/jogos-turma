@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asteroides</title>
+<style>
+  html,body{margin:0;height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  canvas{background:#05050f;border:1px solid #2a2a5c;border-radius:4px;max-width:100%}
+  p{margin:.6rem;font-size:.8rem;color:#9aa0cc;letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div>
+  <canvas id="t" width="760" height="560"></canvas>
+  <p>SETAS PARA GIRAR E ACELERAR &middot; ESPACO ATIRA &middot; R REINICIA</p>
+</div>
+<script>
+const c = document.getElementById('t'), x = c.getContext('2d');
+let nave, pedras, tiros, pontos, fim;
+
+function reiniciar(){
+  nave = {x: 380, y: 280, ang: -Math.PI / 2, vx: 0, vy: 0};
+  tiros = [];
+  pedras = [];
+  for (let i = 0; i < 5; i++) novaPedra(3);
+  pontos = 0; fim = false;
+}
+function novaPedra(tam, px, py){
+  const a = Math.random() * 7;
+  pedras.push({
+    x: px ?? (Math.random() < .5 ? 0 : c.width),
+    y: py ?? Math.random() * c.height,
+    vx: Math.cos(a) * (3.4 - tam * 0.6), vy: Math.sin(a) * (3.4 - tam * 0.6),
+    r: tam * 16, tam
+  });
+}
+
+const teclas = {};
+addEventListener('keydown', e => {
+  teclas[e.key] = true;
+  if ([' ', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  if (e.key === ' ' && !fim && tiros.length < 6){
+    tiros.push({x: nave.x, y: nave.y,
+                vx: Math.cos(nave.ang) * 9, vy: Math.sin(nave.ang) * 9, vida: 60});
+  }
+  if (e.key === 'r' || e.key === 'R') reiniciar();
+});
+addEventListener('keyup', e => teclas[e.key] = false);
+
+const volta = o => {
+  if (o.x < 0) o.x += c.width; if (o.x > c.width) o.x -= c.width;
+  if (o.y < 0) o.y += c.height; if (o.y > c.height) o.y -= c.height;
+};
+
+function passo(){
+  if (!fim){
+    if (teclas.ArrowLeft) nave.ang -= 0.07;
+    if (teclas.ArrowRight) nave.ang += 0.07;
+    if (teclas.ArrowUp){
+      nave.vx += Math.cos(nave.ang) * 0.16;
+      nave.vy += Math.sin(nave.ang) * 0.16;
+    }
+    nave.vx *= 0.99; nave.vy *= 0.99;
+    nave.x += nave.vx; nave.y += nave.vy; volta(nave);
+
+    for (const t of tiros){ t.x += t.vx; t.y += t.vy; t.vida--; volta(t); }
+    tiros = tiros.filter(t => t.vida > 0);
+
+    for (const p of pedras){ p.x += p.vx; p.y += p.vy; volta(p); }
+
+    for (const t of tiros){
+      for (const p of pedras){
+        if (Math.hypot(t.x - p.x, t.y - p.y) < p.r){
+          t.vida = 0; p.morta = true;
+          pontos += p.tam * 20;
+          if (p.tam > 1){ novaPedra(p.tam - 1, p.x, p.y); novaPedra(p.tam - 1, p.x, p.y); }
+          break;
+        }
+      }
+    }
+    pedras = pedras.filter(p => !p.morta);
+    tiros = tiros.filter(t => t.vida > 0);
+
+    for (const p of pedras)
+      if (Math.hypot(nave.x - p.x, nave.y - p.y) < p.r + 10) fim = true;
+
+    if (!pedras.length) for (let i = 0; i < 6; i++) novaPedra(3);
+  }
+
+  x.fillStyle = '#05050f'; x.fillRect(0, 0, c.width, c.height);
+
+  x.strokeStyle = '#9aa0cc'; x.lineWidth = 2;
+  for (const p of pedras){
+    x.beginPath();
+    for (let i = 0; i < 9; i++){
+      const a = (i / 9) * Math.PI * 2;
+      const raio = p.r * (0.78 + ((i * 7 + p.tam) % 4) * 0.07);
+      x[i ? 'lineTo' : 'moveTo'](p.x + Math.cos(a) * raio, p.y + Math.sin(a) * raio);
+    }
+    x.closePath(); x.stroke();
+  }
+
+  x.fillStyle = '#ffd23c';
+  for (const t of tiros){ x.beginPath(); x.arc(t.x, t.y, 3, 0, 7); x.fill(); }
+
+  if (!fim){
+    x.save(); x.translate(nave.x, nave.y); x.rotate(nave.ang);
+    x.strokeStyle = '#00f0ff'; x.beginPath();
+    x.moveTo(16, 0); x.lineTo(-11, 9); x.lineTo(-6, 0); x.lineTo(-11, -9);
+    x.closePath(); x.stroke();
+    if (teclas.ArrowUp){
+      x.strokeStyle = '#ff8906'; x.beginPath();
+      x.moveTo(-7, 0); x.lineTo(-17, 0); x.stroke();
+    }
+    x.restore();
+  }
+
+  x.fillStyle = '#9aa0cc'; x.font = '18px monospace'; x.textAlign = 'left';
+  x.fillText('PONTOS ' + pontos, 16, 30);
+  if (fim){
+    x.textAlign = 'center'; x.font = 'bold 40px monospace'; x.fillStyle = '#ff2e97';
+    x.fillText('NAVE DESTRUIDA', c.width / 2, 280);
+    x.font = '16px monospace'; x.fillStyle = '#9aa0cc';
+    x.fillText('APERTE R', c.width / 2, 320);
+  }
+  requestAnimationFrame(passo);
+}
+reiniciar(); passo();
+</script>
+</body>
+</html>

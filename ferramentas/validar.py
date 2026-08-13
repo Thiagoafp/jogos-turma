@@ -19,7 +19,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 PASTA_ATIVIDADES = RAIZ / "atividades"
 
-ENGINES = {"html", "construct", "pygame", "scratch"}
+ENGINES = {"html", "construct", "pygame", "scratch", "link"}
 CAMPOS = ["titulo", "autor", "turma", "engine", "descricao", "controles"]
 SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 IMAGENS = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
@@ -198,6 +198,25 @@ def validar_conteudo(pasta: Path, dados: dict, p: Problemas) -> None:
 
     elif engine == "pygame":
         validar_pygame(pasta / "main.py", p)
+
+    elif engine == "link":
+        url = str(dados.get("url", "")).strip()
+        if not url:
+            p.erro(
+                'engine "link" exige o campo "url" no jogo.json, com o '
+                "endereco onde o jogo esta no ar"
+            )
+        elif not url.startswith("https://"):
+            p.erro(
+                f'a url "{url}" precisa comecar com https://. Endereco http '
+                "aparece como inseguro e alguns navegadores bloqueiam."
+            )
+        if not dados.get("capa"):
+            p.aviso(
+                "sem capa: o card vai mostrar so as iniciais. Um print do jogo "
+                "faz muita diferenca aqui, porque nao da para ver o jogo antes "
+                "de clicar."
+            )
 
     elif engine == "scratch":
         tem_id = str(dados.get("scratch_id", "")).strip().isdigit()

@@ -1,0 +1,8 @@
+{
+  "titulo": "Quebra-blocos",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Derrube as cinco fileiras sem deixar a bola cair. Voce tem tres vidas e a bola acelera a cada rebatida.",
+  "controles": "Setas ou mouse para mover. Espaco solta a bola. R reinicia."
+}

@@ -40,6 +40,9 @@ CORES_ENGINE = {
     "construct": ("#00c8a0", "Construct"),
     "scratch": ("#f59a23", "Scratch"),
     "html": ("#e34f26", "HTML / JavaScript"),
+    # jogo que precisa de servidor proprio (multiplayer, salas, login):
+    # nao da para embutir num site estatico, entao o card leva ate ele.
+    "link": ("#a78bfa", "Online / servidor"),
 }
 
 # paleta para a capa gerada quando o aluno nao manda imagem
@@ -223,11 +226,25 @@ def pagina_scratch(jogo: dict, destino: Path) -> bool:
     return True
 
 
+def jogo_externo(jogo: dict, destino: Path) -> bool:
+    """Jogo que roda em servidor proprio: nao ha o que copiar.
+
+    A pagina dele nao embute nada - mostra a capa e o botao que leva ao
+    endereco real. Um site estatico nao tem como hospedar sala, PIN ou
+    websocket; fingir que tem daria um iframe quebrado.
+    """
+    if not str(jogo.get("url", "")).strip():
+        print(f"  ! {jogo['slug']}: engine link exige \"url\" no jogo.json")
+        return False
+    return True
+
+
 CONSTRUTORES = {
     "html": copiar_pasta_web,
     "construct": copiar_pasta_web,
     "pygame": compilar_pygame,
     "scratch": pagina_scratch,
+    "link": jogo_externo,
 }
 
 
@@ -412,6 +429,32 @@ header.topo p { margin: .9rem 0 0; color: var(--suave); font-size: .9rem; }
   width: 100%; height: 100%; object-fit: cover; display: block;
 }
 .capa-estudio { position: relative; }
+
+/* jogo que mora em outro servidor: capa clicavel no lugar do iframe */
+.portao {
+  display: block; position: relative; width: min(1000px, 100%);
+  margin: 0 auto; border: 1px solid var(--borda); border-radius: 4px;
+  overflow: hidden; box-shadow: 0 0 0 1px #a78bfa33, 0 0 50px #a78bfa22;
+  transition: box-shadow .18s, transform .18s;
+}
+.portao:hover { transform: translateY(-3px);
+                box-shadow: 0 0 0 1px #a78bfa, 0 0 60px #a78bfa55; }
+.portao img { width: 100%; display: block; }
+.portao .sem-capa {
+  aspect-ratio: 16/9; display: grid; place-items: center;
+  font-size: 4rem; font-weight: 800; color: #fff; letter-spacing: .1em;
+}
+.botao-portao {
+  position: absolute; left: 50%; bottom: 1.6rem; transform: translateX(-50%);
+  background: var(--amarelo); color: #14161f; font-weight: 700;
+  letter-spacing: .16em; font-size: .82rem; padding: .75rem 1.6rem;
+  border-radius: 2px; white-space: nowrap;
+}
+.portao:hover .botao-portao { background: var(--neon); }
+.aviso-externo {
+  max-width: 1000px; margin: 1rem auto 0; color: var(--suave);
+  font-size: .82rem; text-align: center; font-family: system-ui, sans-serif;
+}
 
 /* propaganda do jogo: trailer e prints */
 .promo { margin-top: 2.5rem; }
@@ -782,6 +825,40 @@ def montar_loja(aluno: dict) -> str:
 # ---------------------------------------------------------------- jogar
 
 
+def palco_html(aluno: dict, jogo: dict) -> str:
+    """O jogo em si: embutido, ou o portao para o servidor dele."""
+    if jogo.get("engine") != "link":
+        return f"""
+<div class="palco">
+  <iframe src="jogo/index.html" title="{esc(jogo.get('titulo', ''))}"
+          scrolling="no" allow="autoplay; fullscreen; gamepad"
+          allowfullscreen></iframe>
+</div>"""
+
+    url = str(jogo.get("url", ""))
+    capa = jogo.get("capa")
+    if capa and (jogo["pasta"] / capa).exists():
+        arquivo = f"../../../../capas/{chave_do_jogo(aluno, jogo)}{Path(capa).suffix.lower()}"
+        arte = f'<img src="{esc(arquivo)}" alt="{esc(jogo.get("titulo", ""))}">'
+    else:
+        a, b = GRADIENTES[sum(map(ord, jogo["slug"])) % len(GRADIENTES)]
+        arte = (
+            f'<div class="sem-capa" style="background:linear-gradient(135deg,{a},{b})">'
+            f'{esc(iniciais(jogo.get("titulo", "?")))}</div>'
+        )
+
+    return f"""
+<div class="palco">
+  <a class="portao" href="{esc(url)}" target="_blank" rel="noopener">
+    {arte}
+    <span class="botao-portao">Abrir o jogo &nearr;</span>
+  </a>
+  <p class="aviso-externo">Este jogo roda em servidor proprio e abre numa aba
+     nova. Se o servidor estiver dormindo, a primeira abertura pode demorar
+     alguns segundos.</p>
+</div>"""
+
+
 def montar_pagina_jogo(aluno: dict, jogo: dict, midia: list[dict]) -> str:
     cor, rotulo = CORES_ENGINE.get(jogo.get("engine", ""), ("#888", "Jogo"))
     corpo = f"""
@@ -796,11 +873,7 @@ def montar_pagina_jogo(aluno: dict, jogo: dict, midia: list[dict]) -> str:
 {trilha("Atividades", aluno["curso"], aluno["escola"], aluno["nome"],
         str(jogo.get("titulo", "")))}
 
-<div class="palco">
-  <iframe src="jogo/index.html" title="{esc(jogo.get('titulo', ''))}"
-          scrolling="no" allow="autoplay; fullscreen; gamepad"
-          allowfullscreen></iframe>
-</div>
+{palco_html(aluno, jogo)}
 
 <div class="instrucoes">
   <p><b>Como jogar:</b> {esc(jogo.get('controles', ''))}</p>
@@ -865,6 +938,10 @@ def construir(pular_pygame: bool = False) -> int:
             if capa and (jogo["pasta"] / capa).exists():
                 nome = chave_do_jogo(aluno, jogo) + Path(capa).suffix.lower()
                 shutil.copy2(jogo["pasta"] / capa, SAIDA / "capas" / nome)
+
+            # engine "link" nao copia arquivo nenhum, entao a pasta do jogo
+            # ainda nao existe neste ponto
+            (base / jogo["slug"]).mkdir(parents=True, exist_ok=True)
 
             midia = copiar_midia(aluno, jogo, base / jogo["slug"] / "midia")
             (base / jogo["slug"] / "index.html").write_text(

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clique Rapido</title>
+<style>
+  html,body{margin:0;min-height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  .painel{padding:1rem;text-align:center}
+  .arena{position:relative;width:560px;height:400px;margin:1rem auto;
+    background:#0b0b1e;border:1px solid #2a2a5c;border-radius:6px;overflow:hidden;
+    cursor:crosshair;max-width:92vw}
+  .alvo{position:absolute;width:58px;height:58px;border-radius:50%;
+    background:radial-gradient(circle at 34% 32%,#ffd23c,#ff8906);
+    box-shadow:0 0 18px #ff890688;cursor:pointer;
+    animation:surge .16s ease-out}
+  .alvo.ruim{background:radial-gradient(circle at 34% 32%,#ff8ad8,#ff2e97);
+    box-shadow:0 0 18px #ff2e9788}
+  @keyframes surge{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  .placar{display:flex;gap:2rem;justify-content:center;font-size:.85rem;
+    color:#9aa0cc;letter-spacing:.12em}
+  .placar b{display:block;font-size:1.9rem;color:#ffd23c;margin-top:.2rem}
+  button{margin-top:1rem;background:#ffd23c;border:0;border-radius:3px;
+    padding:.6rem 1.4rem;font-family:inherit;font-weight:700;letter-spacing:.14em;
+    cursor:pointer}
+</style>
+</head>
+<body>
+<div class="painel">
+  <div class="placar">
+    <div>PONTOS<b id="pontos">0</b></div>
+    <div>TEMPO<b id="tempo">30</b></div>
+    <div>RECORDE<b id="recorde">0</b></div>
+  </div>
+  <div class="arena" id="arena"></div>
+  <button id="comecar">COMECAR</button>
+</div>
+<script>
+const arena = document.getElementById('arena');
+let pontos, restante, recorde = 0, relogio, proximo, rodando;
+
+function atualizar(){
+  document.getElementById('pontos').textContent = pontos;
+  document.getElementById('tempo').textContent = restante;
+  document.getElementById('recorde').textContent = recorde;
+}
+
+function nascerAlvo(){
+  if (!rodando) return;
+  const alvo = document.createElement('div');
+  // 1 em 4 e alvo ruim: clicar nele tira ponto
+  const ruim = Math.random() < .25;
+  alvo.className = 'alvo' + (ruim ? ' ruim' : '');
+  alvo.style.left = Math.random() * (arena.clientWidth - 58) + 'px';
+  alvo.style.top  = Math.random() * (arena.clientHeight - 58) + 'px';
+
+  alvo.addEventListener('click', e => {
+    e.stopPropagation();
+    pontos += ruim ? -3 : 1;
+    atualizar();
+    alvo.remove();
+  });
+
+  arena.appendChild(alvo);
+  // o alvo some sozinho; quanto menos tempo sobra, mais rapido ele foge
+  const vida = Math.max(520, 1200 - (30 - restante) * 22);
+  setTimeout(() => alvo.remove(), vida);
+
+  proximo = setTimeout(nascerAlvo, Math.max(280, 850 - (30 - restante) * 18));
+}
+
+function comecar(){
+  clearInterval(relogio); clearTimeout(proximo);
+  arena.innerHTML = '';
+  pontos = 0; restante = 30; rodando = true;
+  atualizar();
+  nascerAlvo();
+
+  relogio = setInterval(() => {
+    restante--;
+    atualizar();
+    if (restante <= 0){
+      rodando = false;
+      clearInterval(relogio); clearTimeout(proximo);
+      arena.innerHTML = '';
+      recorde = Math.max(recorde, pontos);
+      atualizar();
+      setTimeout(() => alert(`Acabou! Voce fez ${pontos} pontos.`), 100);
+    }
+  }, 1000);
+}
+
+document.getElementById('comecar').addEventListener('click', comecar);
+atualizar();
+</script>
+</body>
+</html>

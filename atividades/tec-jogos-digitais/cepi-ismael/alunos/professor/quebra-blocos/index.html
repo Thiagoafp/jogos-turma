@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quebra-blocos</title>
+<style>
+  html,body{margin:0;height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  canvas{background:#0b0b1e;border:1px solid #2a2a5c;border-radius:4px;max-width:100%}
+  p{margin:.6rem;font-size:.8rem;color:#9aa0cc;letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div>
+  <canvas id="t" width="800" height="560"></canvas>
+  <p>SETAS OU MOUSE PARA MOVER &middot; ESPACO PARA SOLTAR &middot; R REINICIA</p>
+</div>
+<script>
+const c = document.getElementById('t'), x = c.getContext('2d');
+const CORES = ['#ff2e97', '#ff8906', '#ffd23c', '#2cb67d', '#00f0ff'];
+const COLS = 10, LINHAS = 5, LARG = 72, ALT = 26, TOPO = 60, MARGEM = 40;
+let raquete, bola, blocos, pontos, vidas, presa, fim;
+
+function reiniciar(){
+  raquete = {x: 340, largura: 120};
+  blocos = [];
+  for (let l = 0; l < LINHAS; l++)
+    for (let col = 0; col < COLS; col++)
+      blocos.push({x: MARGEM + col * LARG, y: TOPO + l * (ALT + 8),
+                   cor: CORES[l], vivo: true});
+  pontos = 0; vidas = 3; fim = false;
+  soltarNaRaquete();
+}
+function soltarNaRaquete(){
+  presa = true;
+  bola = {x: raquete.x + raquete.largura / 2, y: c.height - 44, vx: 0, vy: 0, r: 8};
+}
+
+const teclas = {};
+addEventListener('keydown', e => {
+  teclas[e.key] = true;
+  if ([' ', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  if (e.key === ' ' && presa){ presa = false; bola.vx = 4; bola.vy = -6; }
+  if (e.key === 'r' || e.key === 'R') reiniciar();
+});
+addEventListener('keyup', e => teclas[e.key] = false);
+c.addEventListener('mousemove', e => {
+  const r = c.getBoundingClientRect();
+  raquete.x = (e.clientX - r.left) * (c.width / r.width) - raquete.largura / 2;
+});
+
+function passo(){
+  if (!fim){
+    raquete.x += ((teclas.ArrowRight ? 1 : 0) - (teclas.ArrowLeft ? 1 : 0)) * 9;
+    raquete.x = Math.max(0, Math.min(c.width - raquete.largura, raquete.x));
+
+    if (presa){
+      bola.x = raquete.x + raquete.largura / 2;
+    } else {
+      bola.x += bola.vx; bola.y += bola.vy;
+      if (bola.x < bola.r || bola.x > c.width - bola.r) bola.vx *= -1;
+      if (bola.y < bola.r) bola.vy *= -1;
+
+      if (bola.vy > 0 && bola.y > c.height - 34 &&
+          bola.x > raquete.x && bola.x < raquete.x + raquete.largura){
+        bola.vy = -Math.abs(bola.vy);
+        // o ponto de contato define o angulo: canto joga pro lado
+        bola.vx = ((bola.x - (raquete.x + raquete.largura / 2)) / raquete.largura) * 12;
+      }
+
+      for (const b of blocos){
+        if (!b.vivo) continue;
+        if (bola.x > b.x && bola.x < b.x + LARG - 4 &&
+            bola.y > b.y && bola.y < b.y + ALT){
+          b.vivo = false; bola.vy *= -1; pontos += 10;
+          break;
+        }
+      }
+
+      if (bola.y > c.height){
+        vidas--;
+        if (vidas <= 0) fim = true; else soltarNaRaquete();
+      }
+      if (blocos.every(b => !b.vivo)) fim = true;
+    }
+  }
+
+  x.fillStyle = '#0b0b1e'; x.fillRect(0, 0, c.width, c.height);
+  for (const b of blocos) if (b.vivo){
+    x.fillStyle = b.cor; x.fillRect(b.x, b.y, LARG - 4, ALT);
+  }
+  x.fillStyle = '#eef0ff';
+  x.fillRect(raquete.x, c.height - 26, raquete.largura, 12);
+  x.fillStyle = '#ffd23c';
+  x.beginPath(); x.arc(bola.x, bola.y, bola.r, 0, 7); x.fill();
+
+  x.font = '18px monospace'; x.textAlign = 'left';
+  x.fillStyle = '#9aa0cc';
+  x.fillText('PONTOS ' + pontos, 16, 30);
+  x.fillText('VIDAS ' + vidas, c.width - 110, 30);
+
+  if (fim){
+    x.textAlign = 'center'; x.font = 'bold 40px monospace';
+    const venceu = blocos.every(b => !b.vivo);
+    x.fillStyle = venceu ? '#2cb67d' : '#ff2e97';
+    x.fillText(venceu ? 'VOCE LIMPOU A TELA!' : 'FIM DE JOGO', 400, 280);
+    x.font = '16px monospace'; x.fillStyle = '#9aa0cc';
+    x.fillText('APERTE R', 400, 320);
+  }
+  requestAnimationFrame(passo);
+}
+reiniciar(); passo();
+</script>
+</body>
+</html>

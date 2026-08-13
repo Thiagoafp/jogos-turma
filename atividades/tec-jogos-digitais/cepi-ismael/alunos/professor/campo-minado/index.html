@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campo Minado</title>
+<style>
+  html,body{margin:0;min-height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  .painel{padding:1rem;text-align:center}
+  table{border-collapse:collapse;margin:1rem auto}
+  td{width:34px;height:34px;text-align:center;font-weight:700;font-size:1rem;
+    border:1px solid #2a2a5c;background:#12122a;cursor:pointer;user-select:none}
+  td.aberta{background:#0b0b1e;cursor:default}
+  td.bomba{background:#5c1030;color:#ff8ad8}
+  td.bandeira{color:#ffd23c}
+  .info{color:#9aa0cc;font-size:.85rem;letter-spacing:.1em}
+  button{margin-top:1rem;background:#ffd23c;border:0;border-radius:3px;
+    padding:.6rem 1.4rem;font-family:inherit;font-weight:700;letter-spacing:.14em;
+    cursor:pointer}
+  .c1{color:#00f0ff}.c2{color:#2cb67d}.c3{color:#ff8906}.c4{color:#ff2e97}
+  .c5{color:#a78bfa}.c6{color:#ffd23c}.c7{color:#eef0ff}.c8{color:#9aa0cc}
+</style>
+</head>
+<body>
+<div class="painel">
+  <div class="info">CLIQUE ABRE &middot; BOTAO DIREITO MARCA &middot;
+    <span id="restantes">10</span> BOMBAS</div>
+  <table id="campo"></table>
+  <div class="info" id="estado">&nbsp;</div>
+  <button id="novo">NOVO JOGO</button>
+</div>
+<script>
+const L = 10, C = 10, BOMBAS = 10;
+let mapa, abertas, fim;
+
+function novoJogo(){
+  fim = false; abertas = 0;
+  document.getElementById('estado').innerHTML = '&nbsp;';
+  document.getElementById('restantes').textContent = BOMBAS;
+
+  mapa = Array.from({length: L}, () =>
+    Array.from({length: C}, () => ({bomba: false, aberta: false, marcada: false, n: 0})));
+
+  let postas = 0;
+  while (postas < BOMBAS){
+    const l = Math.floor(Math.random() * L), c = Math.floor(Math.random() * C);
+    if (!mapa[l][c].bomba){ mapa[l][c].bomba = true; postas++; }
+  }
+  recontar();   // conta as bombas vizinhas de cada celula
+  desenhar();
+}
+
+function vizinhas(l, c){
+  const saida = [];
+  for (let dl = -1; dl <= 1; dl++)
+    for (let dc = -1; dc <= 1; dc++){
+      const a = l + dl, b = c + dc;
+      if ((dl || dc) && a >= 0 && a < L && b >= 0 && b < C) saida.push([a, b]);
+    }
+  return saida;
+}
+
+function recontar(){
+  for (let l = 0; l < L; l++)
+    for (let c = 0; c < C; c++)
+      mapa[l][c].n = vizinhas(l, c).filter(([a, b]) => mapa[a][b].bomba).length;
+}
+
+function primeiraJogadaSegura(l, c){
+  // Perder no primeiro clique nao e desafio, e azar. Se a casa escolhida
+  // tiver bomba, a bomba muda de lugar antes de o jogador ver qualquer coisa.
+  if (!mapa[l][c].bomba) return;
+  for (let a = 0; a < L; a++)
+    for (let b = 0; b < C; b++)
+      if (!mapa[a][b].bomba && !(a === l && b === c)){
+        mapa[a][b].bomba = true;
+        mapa[l][c].bomba = false;
+        recontar();
+        return;
+      }
+}
+
+function abrir(l, c){
+  const cel = mapa[l][c];
+  if (fim || cel.aberta || cel.marcada) return;
+  if (abertas === 0) primeiraJogadaSegura(l, c);
+  cel.aberta = true; abertas++;
+
+  if (cel.bomba){
+    fim = true;
+    document.getElementById('estado').textContent = 'BOOM! VOCE PERDEU';
+    for (let a = 0; a < L; a++) for (let b = 0; b < C; b++)
+      if (mapa[a][b].bomba) mapa[a][b].aberta = true;
+  } else if (cel.n === 0){
+    // celula vazia abre a vizinhanca inteira, em cascata
+    for (const [a, b] of vizinhas(l, c)) abrir(a, b);
+  }
+
+  if (!fim && abertas === L * C - BOMBAS){
+    fim = true;
+    document.getElementById('estado').textContent = 'VOCE LIMPOU O CAMPO!';
+  }
+  desenhar();
+}
+
+function marcar(l, c){
+  const cel = mapa[l][c];
+  if (fim || cel.aberta) return;
+  cel.marcada = !cel.marcada;
+  const marcadas = mapa.flat().filter(x => x.marcada).length;
+  document.getElementById('restantes').textContent = BOMBAS - marcadas;
+  desenhar();
+}
+
+function desenhar(){
+  const tabela = document.getElementById('campo');
+  tabela.innerHTML = '';
+  for (let l = 0; l < L; l++){
+    const tr = tabela.insertRow();
+    for (let c = 0; c < C; c++){
+      const cel = mapa[l][c], td = tr.insertCell();
+      if (cel.aberta){
+        td.className = 'aberta' + (cel.bomba ? ' bomba' : '');
+        td.textContent = cel.bomba ? '*' : (cel.n || '');
+        if (!cel.bomba && cel.n) td.classList.add('c' + cel.n);
+      } else if (cel.marcada){
+        td.className = 'bandeira'; td.textContent = 'P';
+      }
+      td.addEventListener('click', () => abrir(l, c));
+      td.addEventListener('contextmenu', e => { e.preventDefault(); marcar(l, c); });
+    }
+  }
+}
+
+document.getElementById('novo').addEventListener('click', novoJogo);
+novoJogo();
+</script>
+</body>
+</html>

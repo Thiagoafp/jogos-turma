@@ -1,0 +1,8 @@
+{
+  "titulo": "Clique Rapido",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Trinta segundos de reflexo. Os alvos amarelos valem ponto, os rosa tiram tres - e todos fogem mais rapido conforme o tempo passa.",
+  "controles": "Clique nos alvos amarelos e evite os rosa."
+}

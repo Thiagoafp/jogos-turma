@@ -1,0 +1,8 @@
+{
+  "titulo": "Genius",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Repita a sequencia de cores e sons, que cresce e acelera a cada acerto. Os bipes sao gerados por codigo, sem nenhum arquivo de audio.",
+  "controles": "Clique nas cores na mesma ordem que acenderam."
+}

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passaro Voador</title>
+<style>
+  html,body{margin:0;height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  canvas{background:#0b0b1e;border:1px solid #2a2a5c;border-radius:4px;max-width:100%;
+    touch-action:none}
+  p{margin:.6rem;font-size:.8rem;color:#9aa0cc;letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div>
+  <canvas id="t" width="640" height="520"></canvas>
+  <p>ESPACO OU CLIQUE PARA BATER ASA &middot; R REINICIA</p>
+</div>
+<script>
+const c = document.getElementById('t'), x = c.getContext('2d');
+const VAO = 120, GRAVIDADE = 0.45, IMPULSO = -7.6;
+let passaro, canos, pontos, recorde = 0, fim, comecou;
+
+function reiniciar(){
+  passaro = {y: 250, v: 0};
+  canos = [];
+  pontos = 0; fim = false; comecou = false;
+}
+function bater(){
+  if (fim){ reiniciar(); return; }
+  comecou = true;
+  passaro.v = IMPULSO;
+}
+addEventListener('keydown', e => {
+  if (e.key === ' '){ e.preventDefault(); bater(); }
+  if (e.key === 'r' || e.key === 'R') reiniciar();
+});
+c.addEventListener('pointerdown', bater);
+
+function novoCano(){
+  const altura = 70 + Math.random() * (c.height - VAO - 190);
+  canos.push({x: c.width, altura, passou: false});
+}
+
+function passo(){
+  if (comecou && !fim){
+    passaro.v += GRAVIDADE;
+    passaro.y += passaro.v;
+
+    if (!canos.length || canos[canos.length - 1].x < c.width - 230) novoCano();
+
+    for (const p of canos){
+      p.x -= 3;
+      if (!p.passou && p.x + 60 < 120){ p.passou = true; pontos++; }
+      const bateNoCano = 120 + 16 > p.x && 120 - 16 < p.x + 60 &&
+                         (passaro.y - 16 < p.altura || passaro.y + 16 > p.altura + VAO);
+      if (bateNoCano) fim = true;
+    }
+    canos = canos.filter(p => p.x > -70);
+
+    if (passaro.y > c.height - 16 || passaro.y < 0) fim = true;
+    if (fim) recorde = Math.max(recorde, pontos);
+  }
+
+  x.fillStyle = '#0b0b1e'; x.fillRect(0, 0, c.width, c.height);
+  // estrelas de fundo, so enfeite
+  x.fillStyle = '#1b1b4a';
+  for (let i = 0; i < 30; i++) x.fillRect((i * 97) % c.width, (i * 53) % c.height, 2, 2);
+
+  x.fillStyle = '#2cb67d';
+  for (const p of canos){
+    x.fillRect(p.x, 0, 60, p.altura);
+    x.fillRect(p.x, p.altura + VAO, 60, c.height);
+  }
+
+  x.save();
+  x.translate(120, passaro.y);
+  x.rotate(Math.max(-0.5, Math.min(1, passaro.v / 12)));
+  x.fillStyle = '#ffd23c';
+  x.beginPath(); x.arc(0, 0, 16, 0, 7); x.fill();
+  x.fillStyle = '#06060f'; x.fillRect(6, -6, 5, 5);
+  x.restore();
+
+  x.fillStyle = '#eef0ff'; x.font = 'bold 40px monospace'; x.textAlign = 'center';
+  x.fillText(pontos, c.width / 2, 60);
+  x.font = '14px monospace'; x.fillStyle = '#9aa0cc';
+  x.fillText('RECORDE ' + recorde, c.width / 2, 85);
+
+  if (!comecou){
+    x.font = '18px monospace';
+    x.fillText('APERTE ESPACO PARA VOAR', c.width / 2, 300);
+  }
+  if (fim){
+    x.font = 'bold 34px monospace'; x.fillStyle = '#ff2e97';
+    x.fillText('CAIU!', c.width / 2, 250);
+    x.font = '16px monospace'; x.fillStyle = '#9aa0cc';
+    x.fillText('ESPACO OU R PARA TENTAR DE NOVO', c.width / 2, 290);
+  }
+  requestAnimationFrame(passo);
+}
+reiniciar(); passo();
+</script>
+</body>
+</html>

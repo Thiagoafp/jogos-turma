@@ -1,0 +1,8 @@
+{
+  "titulo": "Campo Minado",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Dez bombas num campo de dez por dez. Os numeros dizem quantas bombas encostam naquela casa.",
+  "controles": "Clique abre a casa. Botao direito marca uma bomba."
+}

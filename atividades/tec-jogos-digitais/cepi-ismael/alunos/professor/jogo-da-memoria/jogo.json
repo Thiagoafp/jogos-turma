@@ -1,0 +1,8 @@
+{
+  "titulo": "Jogo da Memoria",
+  "autor": "Professor",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Oito pares escondidos em dezesseis cartas. Quantas tentativas voce leva para limpar a mesa?",
+  "controles": "Clique nas cartas para virar."
+}
