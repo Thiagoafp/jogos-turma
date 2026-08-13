@@ -262,6 +262,8 @@ body {
   margin: 0; color: var(--texto); line-height: 1.5;
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   background:
+    repeating-linear-gradient(
+      0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 4px),
     radial-gradient(ellipse at 50% -10%, #1a1150 0%, transparent 60%),
     linear-gradient(var(--fundo), #0a0a18);
   background-attachment: fixed;
@@ -278,13 +280,8 @@ body::before {
   mask-image: linear-gradient(transparent, #000 55%);
   pointer-events: none;
 }
-/* linhas de varredura de monitor CRT */
-body::after {
-  content: ""; position: fixed; inset: 0; z-index: 999; pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
-  opacity: .5;
-}
+/* As linhas CRT fazem parte apenas do fundo do body. Assim, a identidade
+   arcade permanece sem cobrir textos, imagens ou o iframe dos jogos. */
 
 a { color: inherit; text-decoration: none; }
 .envolucro { max-width: 1220px; margin: 0 auto; padding: 0 1.25rem 5rem; }
