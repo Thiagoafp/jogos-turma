@@ -1,0 +1,8 @@
+{
+  "titulo": "Colete as moedas",
+  "autor": "Nome Sobrenome",
+  "turma": "2026/1",
+  "engine": "pygame",
+  "descricao": "Pegue as moedas amarelas e desvie dos blocos vermelhos. Cada moeda deixa o jogo mais rapido.",
+  "controles": "Setas ou WASD para mover. R para recomecar."
+}

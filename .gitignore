@@ -1,0 +1,14 @@
+# o site e gerado pelo build
+site/
+
+# saida do pygbag dentro das pastas dos jogos
+build/
+*.apk
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+.idea/
+.vscode/

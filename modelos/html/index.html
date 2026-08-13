@@ -1,0 +1,136 @@
+<!doctype html>
+<!--
+  Modelo de jogo em HTML/JavaScript - copie esta pasta para comecar o seu.
+
+  REGRAS:
+    1. O arquivo principal se chama index.html e fica na raiz da sua pasta.
+    2. Use apenas caminhos RELATIVOS ("imagens/nave.png", "./jogo.js").
+       Caminho que comeca com "/" quebra no site publicado.
+    3. Tudo que o jogo precisa fica dentro da sua pasta. O site nao tem
+       internet para buscar biblioteca de CDN: baixe o arquivo .js e
+       commite junto.
+    4. Nada de servidor, banco de dados ou API - a pagina e estatica.
+
+  Teste local antes de entregar (abrir o arquivo direto no navegador
+  as vezes engana; use um servidor):
+
+      python -m http.server 8000
+
+  e abra http://localhost:8000
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desvie dos blocos</title>
+  <style>
+    html, body {
+      margin: 0; height: 100%;
+      background: #12162d; color: #f0f0f5;
+      font-family: system-ui, sans-serif;
+      display: grid; place-items: center;
+    }
+    canvas { background: #12162d; max-width: 100%; height: auto; touch-action: none; }
+    p { margin: .6rem; opacity: .75; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div>
+    <canvas id="tela" width="800" height="600"></canvas>
+    <p>Setas ou WASD para mover · R para recomecar</p>
+  </div>
+
+  <script>
+    const tela = document.getElementById('tela');
+    const ctx = tela.getContext('2d');
+
+    const teclas = {};
+    addEventListener('keydown', e => {
+      teclas[e.key] = true;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+        e.preventDefault();          // impede a pagina de rolar
+      }
+      if (e.key === 'r' || e.key === 'R') reiniciar();
+    });
+    addEventListener('keyup', e => { teclas[e.key] = false; });
+
+    let jogador, moeda, inimigos, pontos, perdeu, quadros;
+
+    function reiniciar() {
+      jogador  = { x: 380, y: 530, w: 40, h: 40, v: 5 };
+      moeda    = { x: 0, y: 0, r: 11 };
+      inimigos = [];
+      pontos   = 0;
+      perdeu   = false;
+      quadros  = 0;
+      moverMoeda();
+    }
+
+    function moverMoeda() {
+      moeda.x = 20 + Math.random() * (tela.width  - 40);
+      moeda.y = 20 + Math.random() * (tela.height - 140);
+    }
+
+    function colide(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x &&
+             a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function passo() {
+      if (!perdeu) {
+        quadros++;
+        if (teclas.ArrowLeft  || teclas.a) jogador.x -= jogador.v;
+        if (teclas.ArrowRight || teclas.d) jogador.x += jogador.v;
+        if (teclas.ArrowUp    || teclas.w) jogador.y -= jogador.v;
+        if (teclas.ArrowDown  || teclas.s) jogador.y += jogador.v;
+        jogador.x = Math.max(0, Math.min(tela.width  - jogador.w, jogador.x));
+        jogador.y = Math.max(0, Math.min(tela.height - jogador.h, jogador.y));
+
+        const dx = jogador.x + 20 - moeda.x, dy = jogador.y + 20 - moeda.y;
+        if (Math.hypot(dx, dy) < 30) { pontos++; moverMoeda(); }
+
+        if (quadros % 60 === 0) {
+          inimigos.push({ x: Math.random() * (tela.width - 30), y: -30,
+                          w: 30, h: 30, v: 3 + pontos * 0.2 });
+        }
+        for (const i of inimigos) {
+          i.y += i.v;
+          if (colide(jogador, i)) perdeu = true;
+        }
+        inimigos = inimigos.filter(i => i.y < tela.height);
+      }
+
+      ctx.fillStyle = '#12162d';
+      ctx.fillRect(0, 0, tela.width, tela.height);
+
+      ctx.fillStyle = '#ffd23c';
+      ctx.beginPath(); ctx.arc(moeda.x, moeda.y, moeda.r, 0, 7); ctx.fill();
+
+      ctx.fillStyle = '#eb465a';
+      for (const i of inimigos) ctx.fillRect(i.x, i.y, i.w, i.h);
+
+      ctx.fillStyle = '#f0f0f5';
+      ctx.fillRect(jogador.x, jogador.y, jogador.w, jogador.h);
+
+      ctx.font = '24px system-ui';
+      ctx.fillText('Moedas: ' + pontos, 16, 34);
+
+      if (perdeu) {
+        ctx.fillStyle = '#eb465a';
+        ctx.font = 'bold 56px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('Fim de jogo', tela.width / 2, tela.height / 2);
+        ctx.fillStyle = '#f0f0f5';
+        ctx.font = '22px system-ui';
+        ctx.fillText('Aperte R para jogar de novo', tela.width / 2, tela.height / 2 + 46);
+        ctx.textAlign = 'left';
+      }
+
+      requestAnimationFrame(passo);
+    }
+
+    reiniciar();
+    passo();
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+name: publicar site
+
+# Todo push na main reconstroi a galeria e publica no Cloudflare Pages.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Se dois merges acontecerem juntos, publica so o ultimo.
+concurrency:
+  group: publicar
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # O pygbag baixa o runtime WebAssembly na primeira compilacao.
+      # O cache evita esse download em todo deploy.
+      - name: Cache do pygbag
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pygbag
+          key: pygbag-${{ runner.os }}-v1
+
+      - name: Instalar dependencias
+        run: pip install pygbag pygame
+
+      - name: Validar entregas
+        run: python ferramentas/validar.py
+
+      - name: Montar o site
+        run: python ferramentas/construir.py
+
+      - name: Publicar no Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=jogos-turma --branch=main

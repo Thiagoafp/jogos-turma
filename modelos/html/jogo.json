@@ -1,0 +1,8 @@
+{
+  "titulo": "Desvie dos blocos",
+  "autor": "Nome Sobrenome",
+  "turma": "2026/1",
+  "engine": "html",
+  "descricao": "Pegue as moedas e desvie dos blocos vermelhos que caem.",
+  "controles": "Setas ou WASD para mover. R para recomecar."
+}

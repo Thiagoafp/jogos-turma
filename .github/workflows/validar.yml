@@ -1,0 +1,25 @@
+name: validar entregas
+
+# Roda em todo pull request. O aluno ve o erro aqui, em portugues, antes
+# de qualquer coisa chegar ao site.
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Conferir estrutura das entregas
+        run: python ferramentas/validar.py
+
+      # Monta o site sem compilar WASM: e rapido e ja pega erro de
+      # metadados, capa faltando e engine desconhecida.
+      - name: Montar o site (sem compilar pygame)
+        run: python ferramentas/construir.py --sem-pygame
