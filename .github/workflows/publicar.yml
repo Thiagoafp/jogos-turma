@@ -1,6 +1,7 @@
 name: publicar site
 
-# Todo push na main reconstroi a galeria e publica no Cloudflare Pages.
+# Todo push na main reconstroi a galeria e empurra o resultado para a branch
+# `publicado`, que e o que o Render serve.
 on:
   push:
     branches: [main]
@@ -10,6 +11,9 @@ on:
 concurrency:
   group: publicar
   cancel-in-progress: true
+
+permissions:
+  contents: write        # necessario para empurrar a branch publicado
 
 jobs:
   publicar:
@@ -38,9 +42,14 @@ jobs:
       - name: Montar o site
         run: python ferramentas/construir.py
 
-      - name: Publicar no Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      # A branch `publicado` e descartavel: contem so o site montado, com
+      # historico achatado (force_orphan). Nunca edite nada nela - o proximo
+      # deploy sobrescreve tudo.
+      - name: Publicar na branch que o Render serve
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy site --project-name=jogos-turma --branch=main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: publicado
+          force_orphan: true
+          commit_message: "site montado a partir de ${{ github.sha }}"

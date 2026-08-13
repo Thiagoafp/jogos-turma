@@ -72,20 +72,36 @@ Dois workflows, em `.github/workflows/`:
 - **`validar.yml`** — roda em cada pull request. Confere estrutura,
   metadados e as regras de cada engine, e monta o site sem compilar WASM. O
   aluno vê o erro em português, no próprio PR, antes de qualquer merge.
-- **`publicar.yml`** — roda a cada push na `main`. Compila tudo e publica no
-  **Cloudflare Pages**.
+- **`publicar.yml`** — roda a cada push na `main`. Compila tudo e empurra o
+  resultado para a branch **`publicado`**, que é o que o **Render** serve.
 
-### Configurando o Cloudflare (uma vez só)
+### Por que o Render não constrói o site
 
-1. No painel da Cloudflare: **Workers & Pages → Create → Pages → Direct
-   Upload**, com o nome `jogos-turma`.
-2. Crie um **API token** com a permissão `Cloudflare Pages: Edit`.
-3. No GitHub, em **Settings → Secrets and variables → Actions**, adicione:
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
+O build precisa de Python e do pygbag, que baixa um runtime WebAssembly de
+dezenas de MB. O ambiente de build de site estático do Render não garante
+nenhum dos dois — e uma falha lá derrubaria o site inteiro, inclusive os jogos
+de Construct e HTML que não têm nada a ver com Python.
 
-Esse token é do Pages e **não tem relação com o token de R2** usado em outros
-projetos — são produtos e credenciais separados.
+Então a divisão é: **o GitHub Actions constrói, o Render serve**. O Render só
+precisa saber entregar arquivo, que é o que ele faz bem.
+
+A branch `publicado` é descartável: contém só o site montado, com histórico
+achatado. Nunca edite nada nela — o próximo deploy sobrescreve tudo.
+
+### Configurando o Render (uma vez só)
+
+1. No painel do Render: **New → Static Site**, conectando este repositório.
+2. Em **Branch**, escolha `publicado` (não `main`).
+3. **Build Command**: deixe vazio.
+4. **Publish Directory**: `.`
+5. Crie. A partir daí, todo merge na `main` atualiza o site sozinho.
+
+O `render.yaml` na raiz já traz essa configuração como Blueprint — ajuste a
+linha `repo:` para o endereço real depois de criar o repositório no GitHub.
+
+**Site estático no Render não hiberna.** Quem dorme no plano gratuito é o Web
+Service. Um pai abrindo o link às 22h de domingo vai encontrar o site no ar —
+foi justamente por isso que a galeria é estática.
 
 ## Por que não tem banco de dados
 
@@ -95,7 +111,9 @@ jogos *é* o conteúdo do repositório, e o histórico de entregas *é* o
 histórico do git.
 
 Isso não é economia à toa: um site estático não cai, não hiberna, não expira
-credencial e não tem custo. Um pai abrindo o link daqui a dois anos vai
+credencial e não tem custo. Se fosse um Web Service no Render, o plano
+gratuito dormiria depois de 15 minutos sem acesso — e a primeira visita do dia
+levaria quase um minuto para responder. Um pai abrindo o link daqui a dois anos vai
 encontrar o jogo do filho no ar.
 
 Banco só passaria a fazer sentido com estado de verdade: placar entre

@@ -751,6 +751,34 @@ def montar_indice(alunos: list[dict]) -> str:
     return pagina(TITULO_SITE, corpo)
 
 
+def montar_404() -> str:
+    """Pagina de endereco inexistente. O Render serve este arquivo sozinho.
+
+    Acontece de verdade: aluno troca o nome do estudio, e o link que ele ja
+    mandou para a familia deixa de existir. Melhor cair aqui do que num erro
+    branco do servidor.
+    """
+    corpo = """
+<header class="topo">
+  <h1>GAME OVER</h1>
+  <p>Esta pagina nao existe (ou nao existe mais).</p>
+</header>
+<div class="envolucro" style="text-align:center">
+  <p style="color:var(--suave);font-family:system-ui,sans-serif">
+    Talvez o estudio tenha mudado de nome. De uma olhada na lista completa:
+  </p>
+  <p><a class="jogar" style="display:inline-block;padding:.7rem 2rem"
+        href="/index.html">VOLTAR AO ARCADE</a></p>
+</div>
+<footer>Erro 404</footer>
+"""
+    # prefixo "/" e nao "": o servidor entrega esta pagina para endereco de
+    # qualquer profundidade, entao o CSS precisa vir da raiz. Com caminho
+    # relativo, /a/b/c inexistente carregaria /a/b/estilo.css e a pagina
+    # apareceria sem estilo nenhum.
+    return pagina("Pagina nao encontrada - " + TITULO_SITE, corpo, prefixo="/")
+
+
 # ---------------------------------------------------------------- loja
 
 
@@ -964,6 +992,7 @@ def construir(pular_pygame: bool = False) -> int:
         publicados.append(visivel)
 
     (SAIDA / "index.html").write_text(montar_indice(publicados), encoding="utf-8")
+    (SAIDA / "404.html").write_text(montar_404(), encoding="utf-8")
     # o GitHub Pages ignora pastas iniciadas por _ sem este arquivo
     (SAIDA / ".nojekyll").write_text("", encoding="utf-8")
 
