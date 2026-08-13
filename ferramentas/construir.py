@@ -105,9 +105,11 @@ def compilar_pygame(jogo: dict, destino: Path) -> bool:
         print(f"  ! {jogo['slug']}: sem main.py, pulando")
         return False
 
+    # Apaga build/ INTEIRO, nao so build/web: se a pasta build existir sem a
+    # subpasta web, o pygbag nao recria web e falha ao gravar o .apk.
     construido = pasta / "build" / "web"
-    if construido.exists():
-        shutil.rmtree(construido)
+    if (pasta / "build").exists():
+        shutil.rmtree(pasta / "build")
 
     comando = [
         sys.executable, "-m", "pygbag",
@@ -239,9 +241,12 @@ header.topo p { margin: .6rem 0 0; color: var(--suave); }
 .barra .autor { color: var(--suave); font-size: .9rem; }
 .barra .voltar { margin-left: auto; color: var(--suave); font-size: .92rem; }
 .barra .voltar:hover { color: var(--destaque); }
-.palco { padding: 1.25rem; display: grid; place-items: center; }
+.palco { padding: 1.25rem; }
 .palco iframe {
-  width: 100%; max-width: 1000px; aspect-ratio: 4/3;
+  /* min() e nao max-width: com grid+max-width o iframe estourava para fora
+     da tela em viewport estreita, criando rolagem horizontal na pagina */
+  display: block; margin: 0 auto;
+  width: min(1000px, 100%); aspect-ratio: 4/3;
   border: 1px solid var(--borda); border-radius: 12px; background: #000;
 }
 .instrucoes {
