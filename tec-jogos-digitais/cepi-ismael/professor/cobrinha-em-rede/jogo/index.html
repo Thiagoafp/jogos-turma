@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Snake</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #05060f;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      #game {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+      canvas { display: block; touch-action: none; }
+
+      /* Aviso de girar o aparelho.
+         Em pe, 1920x1080 encolhe para uma faixa de ~200px de altura: o
+         tabuleiro fica ilegivel. Em vez de entregar um jogo ruim, pedimos a
+         rotacao. So aparece em tela de toque estreita e em pe — nunca no
+         monitor do professor, mesmo que a janela esteja alta. */
+      #girar { display: none; }
+
+      @media (orientation: portrait) and (pointer: coarse) {
+        #game { display: none; }
+        #girar {
+          display: grid;
+          place-content: center;
+          justify-items: center;
+          gap: 24px;
+          height: 100%;
+          padding: 32px;
+          text-align: center;
+          color: #e8ecff;
+        }
+        #girar .icone {
+          font-size: 76px;
+          animation: girando 2.2s ease-in-out infinite;
+        }
+        #girar h1 { font-size: 30px; font-weight: 700; color: #25e88a; }
+        #girar p { font-size: 18px; color: #7a86b8; max-width: 30ch; line-height: 1.5; }
+      }
+
+      @keyframes girando {
+        0%, 40% { transform: rotate(0deg); }
+        60%, 100% { transform: rotate(90deg); }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-Dv_BiUdo.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/phaser-CaWnzXme.js">
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="girar">
+      <div class="icone">&#128241;</div>
+      <h1>Gire o celular</h1>
+      <p>O jogo precisa da tela deitada para o tabuleiro caber inteiro.</p>
+    </div>
+  </body>
+</html>

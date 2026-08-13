@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corrida Maluca</title>
+<style>
+  html,body{margin:0;height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  canvas{background:#0b0b1e;border:1px solid #2a2a5c;border-radius:4px;max-width:100%}
+  p{margin:.6rem;font-size:.8rem;color:#9aa0cc;letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div>
+  <canvas id="t" width="480" height="560"></canvas>
+  <p>SETAS PARA DESVIAR &middot; R REINICIA</p>
+</div>
+<script>
+const c = document.getElementById('t'), x = c.getContext('2d');
+const PISTAS = [90, 190, 290, 390];
+let carro, inimigos, faixa, distancia, velocidade, fim, recorde = 0;
+
+function reiniciar(){
+  carro = {pista: 1, x: PISTAS[1]};
+  inimigos = []; faixa = 0; distancia = 0; velocidade = 4; fim = false;
+}
+
+addEventListener('keydown', e => {
+  if (['ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  if (fim){ if (e.key === 'r' || e.key === 'R') reiniciar(); return; }
+  if (e.key === 'ArrowLeft') carro.pista = Math.max(0, carro.pista - 1);
+  if (e.key === 'ArrowRight') carro.pista = Math.min(3, carro.pista + 1);
+  if (e.key === 'r' || e.key === 'R') reiniciar();
+});
+
+function desenharCarro(px, py, cor){
+  x.fillStyle = cor;
+  x.fillRect(px - 22, py - 34, 44, 68);
+  x.fillStyle = '#06060f';
+  x.fillRect(px - 15, py - 22, 30, 18);
+  x.fillRect(px - 15, py + 6, 30, 14);
+}
+
+function passo(){
+  if (!fim){
+    distancia++;
+    velocidade = 4 + distancia / 900;
+    faixa = (faixa + velocidade) % 60;
+
+    // o carro desliza ate a pista escolhida, em vez de teleportar
+    carro.x += (PISTAS[carro.pista] - carro.x) * 0.24;
+
+    if (distancia % Math.max(24, 70 - Math.floor(distancia / 260)) === 0){
+      const pista = Math.floor(Math.random() * 4);
+      inimigos.push({x: PISTAS[pista], y: -70,
+                     cor: ['#ff2e97', '#ff8906', '#a78bfa'][Math.floor(Math.random() * 3)]});
+    }
+
+    for (const i of inimigos){
+      i.y += velocidade + 2;
+      if (Math.abs(i.x - carro.x) < 40 && Math.abs(i.y - 470) < 64) fim = true;
+    }
+    inimigos = inimigos.filter(i => i.y < c.height + 80);
+    if (fim) recorde = Math.max(recorde, Math.floor(distancia / 10));
+  }
+
+  x.fillStyle = '#0b0b1e'; x.fillRect(0, 0, c.width, c.height);
+
+  x.strokeStyle = '#2a2a5c'; x.lineWidth = 3;
+  for (const px of [40, 140, 240, 340, 440]){
+    x.beginPath(); x.moveTo(px, 0); x.lineTo(px, c.height); x.stroke();
+  }
+  x.strokeStyle = '#3a3a7a'; x.setLineDash([26, 34]); x.lineDashOffset = -faixa;
+  for (const px of [140, 240, 340]){
+    x.beginPath(); x.moveTo(px, 0); x.lineTo(px, c.height); x.stroke();
+  }
+  x.setLineDash([]);
+
+  for (const i of inimigos) desenharCarro(i.x, i.y, i.cor);
+  if (!fim) desenharCarro(carro.x, 470, '#00f0ff');
+
+  x.fillStyle = '#9aa0cc'; x.font = '16px monospace'; x.textAlign = 'left';
+  x.fillText('METROS ' + Math.floor(distancia / 10), 14, 26);
+  x.fillText('RECORDE ' + recorde, 14, 48);
+
+  if (fim){
+    x.textAlign = 'center'; x.font = 'bold 34px monospace'; x.fillStyle = '#ff2e97';
+    x.fillText('BATEU!', c.width / 2, 280);
+    x.font = '15px monospace'; x.fillStyle = '#9aa0cc';
+    x.fillText('APERTE R', c.width / 2, 316);
+  }
+  requestAnimationFrame(passo);
+}
+reiniciar(); passo();
+</script>
+</body>
+</html>

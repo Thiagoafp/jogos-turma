@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <rect width="640" height="400" fill="#12162d"/>
+  <circle cx="200" cy="120" r="11" fill="#ffd23c"/>
+  <rect x="420" y="60"  width="30" height="30" fill="#eb465a" rx="3"/>
+  <rect x="300" y="180" width="30" height="30" fill="#eb465a" rx="3"/>
+  <rect x="120" y="250" width="30" height="30" fill="#eb465a" rx="3"/>
+  <rect x="290" y="330" width="40" height="40" fill="#f0f0f5" rx="6"/>
+  <text x="24" y="42" fill="#f0f0f5" font-family="monospace" font-size="24">Moedas: 7</text>
+  <text x="320" y="220" fill="#ffffff" font-family="monospace" font-size="15"
+        text-anchor="middle" opacity=".35">desvie · colete · sobreviva</text>
+</svg>

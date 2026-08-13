@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genius</title>
+<style>
+  html,body{margin:0;min-height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  .painel{padding:1rem;text-align:center}
+  .grade{display:grid;grid-template-columns:repeat(2,130px);gap:14px;margin:1.2rem auto}
+  .botao{width:130px;height:130px;border-radius:10px;cursor:pointer;
+    opacity:.42;transition:opacity .12s,transform .12s}
+  .botao.aceso{opacity:1;transform:scale(1.04)}
+  .info{color:#9aa0cc;font-size:.85rem;letter-spacing:.12em;min-height:1.4em}
+  .nivel{font-size:2.4rem;font-weight:700;color:#ffd23c}
+  button{margin-top:.6rem;background:#ffd23c;border:0;border-radius:3px;
+    padding:.6rem 1.4rem;font-family:inherit;font-weight:700;letter-spacing:.14em;
+    cursor:pointer}
+</style>
+</head>
+<body>
+<div class="painel">
+  <div class="nivel" id="nivel">0</div>
+  <div class="info" id="estado">APERTE COMECAR</div>
+  <div class="grade" id="grade"></div>
+  <button id="comecar">COMECAR</button>
+</div>
+<script>
+const CORES = ['#2cb67d', '#ff2e97', '#ffd23c', '#00f0ff'];
+const grade = document.getElementById('grade');
+const botoes = CORES.map((cor, i) => {
+  const b = document.createElement('div');
+  b.className = 'botao'; b.style.background = cor;
+  b.addEventListener('click', () => clicar(i));
+  grade.appendChild(b);
+  return b;
+});
+
+let sequencia, posicao, aceitando;
+
+// bipe por codigo: sem arquivo de som, cada cor tem sua nota
+const audio = new (window.AudioContext || window.webkitAudioContext)();
+function bipe(i){
+  const osc = audio.createOscillator(), vol = audio.createGain();
+  osc.frequency.value = [330, 415, 494, 622][i];
+  osc.type = 'sine';
+  vol.gain.setValueAtTime(.12, audio.currentTime);
+  vol.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .35);
+  osc.connect(vol); vol.connect(audio.destination);
+  osc.start(); osc.stop(audio.currentTime + .35);
+}
+
+const esperar = ms => new Promise(r => setTimeout(r, ms));
+
+async function acender(i, tempo = 400){
+  botoes[i].classList.add('aceso'); bipe(i);
+  await esperar(tempo);
+  botoes[i].classList.remove('aceso');
+  await esperar(120);
+}
+
+async function mostrarSequencia(){
+  aceitando = false;
+  document.getElementById('estado').textContent = 'OLHE A SEQUENCIA';
+  await esperar(600);
+  // acelera conforme cresce, senao fica lento demais no nivel 10
+  const tempo = Math.max(180, 440 - sequencia.length * 18);
+  for (const i of sequencia) await acender(i, tempo);
+  document.getElementById('estado').textContent = 'SUA VEZ';
+  aceitando = true;
+  posicao = 0;
+}
+
+function proximoNivel(){
+  sequencia.push(Math.floor(Math.random() * 4));
+  document.getElementById('nivel').textContent = sequencia.length;
+  mostrarSequencia();
+}
+
+async function clicar(i){
+  if (!aceitando) return;
+  if (audio.state === 'suspended') audio.resume();
+  await acender(i, 200);
+
+  if (sequencia[posicao] !== i){
+    aceitando = false;
+    document.getElementById('estado').textContent =
+      `ERROU! CHEGOU AO NIVEL ${sequencia.length}`;
+    return;
+  }
+  posicao++;
+  if (posicao === sequencia.length){
+    aceitando = false;
+    await esperar(500);
+    proximoNivel();
+  }
+}
+
+document.getElementById('comecar').addEventListener('click', () => {
+  if (audio.state === 'suspended') audio.resume();
+  sequencia = [];
+  proximoNivel();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jogo da Velha</title>
+<style>
+  html,body{margin:0;min-height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  .painel{padding:1rem;text-align:center}
+  .grade{display:grid;grid-template-columns:repeat(3,96px);gap:8px;margin:1rem auto}
+  .casa{width:96px;height:96px;border:1px solid #2a2a5c;background:#12122a;
+    border-radius:6px;display:grid;place-items:center;font-size:3rem;
+    cursor:pointer;user-select:none;transition:background .12s}
+  .casa:hover{background:#1b1b4a}
+  .casa.x{color:#00f0ff}.casa.o{color:#ff2e97}
+  .casa.venceu{box-shadow:0 0 0 2px #ffd23c inset}
+  .info{color:#9aa0cc;font-size:.85rem;letter-spacing:.12em;min-height:1.4em}
+  button{margin-top:1rem;background:#ffd23c;border:0;border-radius:3px;
+    padding:.6rem 1.4rem;font-family:inherit;font-weight:700;letter-spacing:.14em;
+    cursor:pointer}
+</style>
+</head>
+<body>
+<div class="painel">
+  <div class="info" id="estado">SUA VEZ &middot; VOCE E O X</div>
+  <div class="grade" id="grade"></div>
+  <button id="novo">NOVO JOGO</button>
+</div>
+<script>
+const LINHAS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const grade = document.getElementById('grade');
+const estado = document.getElementById('estado');
+let tab, acabou;
+
+function novoJogo(){
+  tab = Array(9).fill('');
+  acabou = false;
+  estado.textContent = 'SUA VEZ · VOCE E O X';
+  desenhar();
+}
+
+function vencedor(t){
+  for (const [a,b,c] of LINHAS)
+    if (t[a] && t[a] === t[b] && t[b] === t[c]) return {jogador: t[a], linha: [a,b,c]};
+  return null;
+}
+
+function desenhar(vitoria){
+  grade.innerHTML = '';
+  tab.forEach((v, i) => {
+    const casa = document.createElement('div');
+    casa.className = 'casa' + (v ? ' ' + v.toLowerCase() : '');
+    if (vitoria && vitoria.linha.includes(i)) casa.classList.add('venceu');
+    casa.textContent = v;
+    casa.addEventListener('click', () => jogar(i));
+    grade.appendChild(casa);
+  });
+}
+
+function jogar(i){
+  if (acabou || tab[i]) return;
+  tab[i] = 'X';
+  if (terminou()) return;
+  // a maquina pensa um instante, senao parece que nem jogou
+  setTimeout(jogadaDaMaquina, 260);
+  desenhar();
+}
+
+function jogadaDaMaquina(){
+  if (acabou) return;
+  const vazias = tab.map((v, i) => v ? null : i).filter(i => i !== null);
+
+  // 1) ganha se puder  2) bloqueia se precisar  3) centro  4) canto  5) qualquer
+  const buscar = quem => vazias.find(i => {
+    const copia = [...tab]; copia[i] = quem;
+    return vencedor(copia)?.jogador === quem;
+  });
+
+  const escolha =
+    buscar('O') ?? buscar('X') ??
+    (tab[4] === '' ? 4 : null) ??
+    [0, 2, 6, 8].find(i => tab[i] === '') ??
+    vazias[0];
+
+  tab[escolha] = 'O';
+  terminou();
+}
+
+function terminou(){
+  const v = vencedor(tab);
+  if (v){
+    acabou = true;
+    estado.textContent = v.jogador === 'X' ? 'VOCE VENCEU!' : 'A MAQUINA VENCEU';
+    desenhar(v);
+    return true;
+  }
+  if (tab.every(x => x)){
+    acabou = true;
+    estado.textContent = 'DEU VELHA';
+    desenhar();
+    return true;
+  }
+  desenhar();
+  return false;
+}
+
+document.getElementById('novo').addEventListener('click', novoJogo);
+novoJogo();
+</script>
+</body>
+</html>

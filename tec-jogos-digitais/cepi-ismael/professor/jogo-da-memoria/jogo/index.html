@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jogo da Memoria</title>
+<style>
+  :root{--carta:#12122a;--borda:#2a2a5c;--neon:#00f0ff}
+  html,body{margin:0;min-height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  .painel{padding:1rem;text-align:center}
+  .grade{display:grid;grid-template-columns:repeat(4,90px);gap:12px;margin:1rem auto}
+  .carta{width:90px;height:90px;border-radius:6px;border:1px solid var(--borda);
+    background:var(--carta);display:grid;place-items:center;font-size:2.2rem;
+    cursor:pointer;user-select:none;transition:background .15s,transform .15s}
+  .carta:hover{transform:translateY(-3px)}
+  .carta.virada{background:#1b1b4a;box-shadow:0 0 0 1px var(--neon)}
+  .carta.certa{background:#0f3d2e;box-shadow:0 0 0 1px #2cb67d;cursor:default}
+  .carta:not(.virada):not(.certa) span{visibility:hidden}
+  .info{color:#9aa0cc;font-size:.85rem;letter-spacing:.1em}
+  button{margin-top:1rem;background:#ffd23c;border:0;border-radius:3px;
+    padding:.6rem 1.4rem;font-family:inherit;font-weight:700;letter-spacing:.14em;
+    cursor:pointer}
+  @media(max-width:420px){.grade{grid-template-columns:repeat(4,68px)}
+    .carta{width:68px;height:68px;font-size:1.7rem}}
+</style>
+</head>
+<body>
+<div class="painel">
+  <div class="info"><span id="tentativas">0</span> TENTATIVAS &middot;
+    <span id="achados">0</span>/8 PARES</div>
+  <div class="grade" id="grade"></div>
+  <button id="novo">JOGAR DE NOVO</button>
+</div>
+<script>
+const SIMBOLOS = ['🚀','👾','🎮','⭐','🍄','💎','🔥','🐍'];
+const grade = document.getElementById('grade');
+let viradas, tentativas, achados, travado;
+
+function embaralhar(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function novoJogo(){
+  viradas = []; tentativas = 0; achados = 0; travado = false;
+  document.getElementById('tentativas').textContent = 0;
+  document.getElementById('achados').textContent = 0;
+  grade.innerHTML = '';
+
+  embaralhar([...SIMBOLOS, ...SIMBOLOS]).forEach(simbolo => {
+    const carta = document.createElement('div');
+    carta.className = 'carta';
+    carta.dataset.simbolo = simbolo;
+    carta.innerHTML = `<span>${simbolo}</span>`;
+    carta.addEventListener('click', () => virar(carta));
+    grade.appendChild(carta);
+  });
+}
+
+function virar(carta){
+  if (travado || carta.classList.contains('virada') ||
+      carta.classList.contains('certa')) return;
+
+  carta.classList.add('virada');
+  viradas.push(carta);
+  if (viradas.length < 2) return;
+
+  tentativas++;
+  document.getElementById('tentativas').textContent = tentativas;
+  const [a, b] = viradas;
+
+  if (a.dataset.simbolo === b.dataset.simbolo){
+    a.classList.add('certa'); b.classList.add('certa');
+    a.classList.remove('virada'); b.classList.remove('virada');
+    viradas = [];
+    achados++;
+    document.getElementById('achados').textContent = achados;
+    if (achados === SIMBOLOS.length){
+      setTimeout(() => alert(`Voce achou todos os pares em ${tentativas} tentativas!`), 250);
+    }
+  } else {
+    // trava a mesa enquanto o jogador olha as duas cartas erradas
+    travado = true;
+    setTimeout(() => {
+      a.classList.remove('virada'); b.classList.remove('virada');
+      viradas = []; travado = false;
+    }, 750);
+  }
+}
+
+document.getElementById('novo').addEventListener('click', novoJogo);
+novoJogo();
+</script>
+</body>
+</html>

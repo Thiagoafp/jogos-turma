@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pong</title>
+<style>
+  html,body{margin:0;height:100%;background:#06060f;color:#eef0ff;
+    font-family:ui-monospace,Consolas,monospace;display:grid;place-items:center}
+  canvas{background:#0b0b1e;border:1px solid #2a2a5c;border-radius:4px;max-width:100%}
+  p{margin:.6rem;font-size:.8rem;color:#9aa0cc;letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div>
+  <canvas id="t" width="800" height="500"></canvas>
+  <p>SETAS OU W/S PARA MOVER &middot; ESPACO PARA COMECAR</p>
+</div>
+<script>
+const c = document.getElementById('t'), x = c.getContext('2d');
+const ALT_RAQ = 90, LARG_RAQ = 12;
+let jogador, cpu, bola, pontos, rodando;
+
+function reiniciar(){
+  jogador = {y: 205, v: 0};
+  cpu = {y: 205};
+  pontos = {eu: 0, ele: 0};
+  rodando = false;
+  sacar(1);
+}
+function sacar(dir){
+  bola = {x: 400, y: 250, vx: 5 * dir, vy: (Math.random() * 6 - 3)};
+}
+
+const teclas = {};
+addEventListener('keydown', e => {
+  teclas[e.key] = true;
+  if ([' ', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault();
+  if (e.key === ' ') rodando = true;
+});
+addEventListener('keyup', e => teclas[e.key] = false);
+
+function passo(){
+  if (rodando){
+    // jogador. O ternario nao e enfeite: teclas.ArrowUp e undefined ate a
+    // tecla ser pressionada pela primeira vez, e undefined - undefined da
+    // NaN - a raquete some da tela no primeiro quadro.
+    const sobe = (teclas.ArrowUp || teclas.w || teclas.W) ? 1 : 0;
+    const desce = (teclas.ArrowDown || teclas.s || teclas.S) ? 1 : 0;
+    jogador.y += (desce - sobe) * 7;
+    jogador.y = Math.max(0, Math.min(c.height - ALT_RAQ, jogador.y));
+
+    // cpu: persegue a bola, mas com folga - senao e imbativel
+    const alvo = bola.y - ALT_RAQ / 2;
+    cpu.y += Math.max(-5, Math.min(5, (alvo - cpu.y) * 0.09));
+    cpu.y = Math.max(0, Math.min(c.height - ALT_RAQ, cpu.y));
+
+    bola.x += bola.vx; bola.y += bola.vy;
+    if (bola.y < 8 || bola.y > c.height - 8) bola.vy *= -1;
+
+    // rebate: o ponto de contato muda o angulo
+    const bate = (rx, ry) => bola.x > rx - 10 && bola.x < rx + LARG_RAQ + 10 &&
+                             bola.y > ry && bola.y < ry + ALT_RAQ;
+    if (bola.vx < 0 && bate(30, jogador.y)){
+      bola.vx = Math.abs(bola.vx) * 1.05;
+      bola.vy = (bola.y - (jogador.y + ALT_RAQ / 2)) * 0.16;
+    }
+    if (bola.vx > 0 && bate(c.width - 30 - LARG_RAQ, cpu.y)){
+      bola.vx = -Math.abs(bola.vx) * 1.05;
+      bola.vy = (bola.y - (cpu.y + ALT_RAQ / 2)) * 0.16;
+    }
+
+    if (bola.x < 0){ pontos.ele++; sacar(1); rodando = false; }
+    if (bola.x > c.width){ pontos.eu++; sacar(-1); rodando = false; }
+  }
+
+  x.fillStyle = '#0b0b1e'; x.fillRect(0, 0, c.width, c.height);
+  x.strokeStyle = '#2a2a5c'; x.setLineDash([8, 12]);
+  x.beginPath(); x.moveTo(400, 0); x.lineTo(400, 500); x.stroke();
+  x.setLineDash([]);
+
+  x.fillStyle = '#00f0ff'; x.fillRect(30, jogador.y, LARG_RAQ, ALT_RAQ);
+  x.fillStyle = '#ff2e97'; x.fillRect(c.width - 42, cpu.y, LARG_RAQ, ALT_RAQ);
+  x.fillStyle = '#ffd23c';
+  x.beginPath(); x.arc(bola.x, bola.y, 8, 0, 7); x.fill();
+
+  x.fillStyle = '#eef0ff'; x.font = '38px monospace';
+  x.textAlign = 'center';
+  x.fillText(pontos.eu, 340, 60); x.fillText(pontos.ele, 460, 60);
+  if (!rodando){
+    x.font = '18px monospace'; x.fillStyle = '#9aa0cc';
+    x.fillText('APERTE ESPACO', 400, 300);
+  }
+  requestAnimationFrame(passo);
+}
+reiniciar(); passo();
+</script>
+</body>
+</html>

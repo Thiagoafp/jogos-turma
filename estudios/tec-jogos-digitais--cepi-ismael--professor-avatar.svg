@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="f" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7f5af0"/>
+      <stop offset="1" stop-color="#00f0ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" fill="url(#f)"/>
+  <!-- naveszinha pixelada -->
+  <g fill="#06060f">
+    <rect x="56" y="30" width="8" height="8"/>
+    <rect x="48" y="38" width="24" height="8"/>
+    <rect x="40" y="46" width="40" height="8"/>
+    <rect x="32" y="54" width="56" height="8"/>
+    <rect x="32" y="62" width="8" height="16"/>
+    <rect x="80" y="62" width="8" height="16"/>
+    <rect x="52" y="62" width="16" height="8"/>
+  </g>
+  <g fill="#ffd23c">
+    <rect x="52" y="78" width="6" height="10"/>
+    <rect x="62" y="78" width="6" height="10"/>
+    <rect x="56" y="90" width="8" height="8"/>
+  </g>
+</svg>

@@ -1,0 +1,266 @@
+
+:root {
+  --fundo: #06060f; --carta: #12122a; --borda: #2a2a5c;
+  --texto: #eef0ff; --suave: #9aa0cc;
+  --neon: #00f0ff; --magenta: #ff2e97; --amarelo: #ffd23c;
+}
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; color: var(--texto); line-height: 1.5;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background:
+    repeating-linear-gradient(
+      0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at 50% -10%, #1a1150 0%, transparent 60%),
+    linear-gradient(var(--fundo), #0a0a18);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+/* grade em perspectiva no rodape, tipo cenario de arcade */
+body::before {
+  content: ""; position: fixed; inset: auto 0 0 0; height: 45vh; z-index: -1;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 39px, #2a2a5c66 39px 40px),
+    repeating-linear-gradient(0deg, transparent 0 39px, #2a2a5c66 39px 40px);
+  transform: perspective(320px) rotateX(62deg);
+  transform-origin: bottom center;
+  mask-image: linear-gradient(transparent, #000 55%);
+  pointer-events: none;
+}
+/* As linhas CRT fazem parte apenas do fundo do body. Assim, a identidade
+   arcade permanece sem cobrir textos, imagens ou o iframe dos jogos. */
+
+a { color: inherit; text-decoration: none; }
+.envolucro { max-width: 1220px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+header.topo { text-align: center; padding: 3.5rem 1rem 1rem; }
+header.topo h1 {
+  margin: 0; font-size: clamp(1.7rem, 5.5vw, 3rem);
+  letter-spacing: .12em; font-weight: 800; color: #fff;
+  text-shadow: 0 0 6px var(--neon), 0 0 22px var(--neon), 0 0 48px #0088ff88;
+  animation: piscar 5s infinite;
+}
+@keyframes piscar {
+  0%,96%,100% { opacity: 1 } 97% { opacity: .55 } 98% { opacity: 1 }
+}
+header.topo p { margin: .9rem 0 0; color: var(--suave); font-size: .9rem; }
+
+/* trilha da hierarquia: Atividades > Curso > Escola > Alunos */
+.trilha {
+  text-align: center; color: var(--suave); font-size: .72rem;
+  letter-spacing: .18em; text-transform: uppercase; padding: 1.5rem 1rem .5rem;
+}
+.trilha b { color: var(--neon); font-weight: 600; }
+.trilha span { opacity: .45; margin: 0 .5rem; }
+
+.secao { margin-top: 2.5rem; }
+.secao h2 {
+  margin: 0 0 .2rem; font-size: 1rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--magenta);
+  text-shadow: 0 0 12px #ff2e9766;
+}
+.secao .sub {
+  margin: 0 0 1.4rem; color: var(--suave); font-size: .78rem;
+  letter-spacing: .14em; text-transform: uppercase;
+  border-bottom: 1px solid var(--borda); padding-bottom: .8rem;
+}
+
+.grade {
+  display: grid; gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+}
+
+.carta {
+  position: relative; background: var(--carta);
+  border: 1px solid var(--borda); border-radius: 4px; overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.carta:hover {
+  transform: translateY(-6px); border-color: var(--neon);
+  box-shadow: 0 0 0 1px var(--neon), 0 0 28px #00f0ff55, 0 16px 40px #000a;
+}
+.carta .capa {
+  aspect-ratio: 16/10; display: grid; place-items: center; position: relative;
+  font-size: 2.8rem; font-weight: 800; color: #fff; letter-spacing: .08em;
+  text-shadow: 0 3px 18px rgba(0,0,0,.45);
+}
+.carta .capa::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, rgba(0,0,0,.22) 0 2px, transparent 2px 4px);
+}
+.carta .capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.carta .corpo {
+  padding: 1rem 1.1rem 1.2rem; flex: 1;
+  display: flex; flex-direction: column; gap: .5rem;
+}
+.carta h3 { margin: 0; font-size: 1.05rem; color: #fff; letter-spacing: .02em; }
+.carta .autor { color: var(--neon); font-size: .8rem; letter-spacing: .08em; }
+.carta .desc {
+  color: var(--suave); font-size: .82rem; flex: 1; line-height: 1.55;
+  font-family: system-ui, sans-serif;
+}
+.etiqueta {
+  align-self: flex-start; font-size: .62rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: .22rem .6rem; border-radius: 2px; color: #06060f;
+}
+.jogar {
+  margin-top: .5rem; text-align: center; font-weight: 700;
+  letter-spacing: .18em; font-size: .78rem;
+  background: var(--amarelo); color: #14161f;
+  padding: .6rem; border-radius: 2px;
+}
+.carta:hover .jogar { background: var(--neon); }
+
+/* estudio ainda sem jogo: presente na lista, mas discreto */
+.carta.sem-jogo { opacity: .62; }
+.carta.sem-jogo:hover { opacity: 1; }
+.jogar.apagado {
+  background: transparent; color: var(--suave);
+  border: 1px solid var(--borda);
+}
+.carta:hover .jogar.apagado { background: transparent; color: var(--neon);
+                              border-color: var(--neon); }
+
+/* abertura do estudio */
+.hero {
+  position: relative; min-height: 260px;
+  background-size: cover; background-position: center;
+  border-bottom: 1px solid var(--borda);
+  display: flex; align-items: flex-end;
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px),
+    linear-gradient(transparent 20%, #06060fdd 92%);
+}
+.hero-conteudo {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; gap: 1.4rem; flex-wrap: wrap;
+  max-width: 1220px; margin: 0 auto; padding: 2rem 1.25rem 1.6rem; width: 100%;
+}
+.hero h2 {
+  margin: 0; font-size: clamp(1.4rem, 4vw, 2.2rem); color: #fff;
+  letter-spacing: .1em; text-shadow: 0 0 10px var(--neon), 0 0 34px #0088ff77;
+}
+.hero .creditos {
+  margin: .5rem 0 0; color: var(--suave); font-size: .78rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.hero .lema {
+  margin: .6rem 0 0; color: var(--amarelo); font-size: .95rem;
+  font-family: system-ui, sans-serif; font-style: italic; max-width: 60ch;
+}
+
+.avatar, .avatar-mini {
+  display: grid; place-items: center; overflow: hidden; flex: none;
+  font-weight: 800; color: #fff; background: var(--carta);
+}
+.avatar {
+  width: 132px; height: 132px; border-radius: 6px; font-size: 2.6rem;
+  border: 2px solid var(--neon);
+  box-shadow: 0 0 24px #00f0ff66, 0 10px 30px #000a;
+}
+.avatar-mini {
+  position: absolute; left: 1rem; bottom: 1rem; z-index: 1;
+  width: 62px; height: 62px; border-radius: 5px; font-size: 1.2rem;
+  border: 2px solid var(--neon); box-shadow: 0 0 16px #00f0ff55;
+}
+.avatar img, .avatar-mini img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.capa-estudio { position: relative; }
+
+/* jogo que mora em outro servidor: capa clicavel no lugar do iframe */
+.portao {
+  display: block; position: relative; width: min(1000px, 100%);
+  margin: 0 auto; border: 1px solid var(--borda); border-radius: 4px;
+  overflow: hidden; box-shadow: 0 0 0 1px #a78bfa33, 0 0 50px #a78bfa22;
+  transition: box-shadow .18s, transform .18s;
+}
+.portao:hover { transform: translateY(-3px);
+                box-shadow: 0 0 0 1px #a78bfa, 0 0 60px #a78bfa55; }
+.portao img { width: 100%; display: block; }
+.portao .sem-capa {
+  aspect-ratio: 16/9; display: grid; place-items: center;
+  font-size: 4rem; font-weight: 800; color: #fff; letter-spacing: .1em;
+}
+.botao-portao {
+  position: absolute; left: 50%; bottom: 1.6rem; transform: translateX(-50%);
+  background: var(--amarelo); color: #14161f; font-weight: 700;
+  letter-spacing: .16em; font-size: .82rem; padding: .75rem 1.6rem;
+  border-radius: 2px; white-space: nowrap;
+}
+.portao:hover .botao-portao { background: var(--neon); }
+.aviso-externo {
+  max-width: 1000px; margin: 1rem auto 0; color: var(--suave);
+  font-size: .82rem; text-align: center; font-family: system-ui, sans-serif;
+}
+
+/* propaganda do jogo: trailer e prints */
+.promo { margin-top: 2.5rem; }
+.promo h3 {
+  margin: 0 0 1rem; font-size: .8rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--magenta);
+}
+.promo figure { margin: 0 0 1rem; }
+.promo figcaption {
+  margin-top: .4rem; font-size: .8rem; color: var(--suave);
+  font-family: system-ui, sans-serif;
+}
+.promo .trailer video {
+  width: 100%; display: block; border-radius: 4px;
+  border: 1px solid var(--borda); background: #000;
+}
+.promo .prints {
+  display: grid; gap: .9rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.promo .prints img {
+  width: 100%; display: block; border-radius: 4px;
+  border: 1px solid var(--borda);
+}
+
+.vazio {
+  text-align: center; color: var(--suave); padding: 4rem 1rem;
+  letter-spacing: .1em;
+}
+
+/* pagina de um jogo */
+.barra {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: .9rem 1.25rem; background: #0b0b1e;
+  border-bottom: 1px solid var(--borda);
+}
+.barra h1 {
+  margin: 0; font-size: 1.05rem; color: #fff; letter-spacing: .06em;
+  text-shadow: 0 0 14px #00f0ff55;
+}
+.barra .autor { color: var(--suave); font-size: .76rem; letter-spacing: .1em; }
+.barra .voltar {
+  margin-left: auto; color: var(--suave); font-size: .74rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.barra .voltar:hover { color: var(--neon); }
+.palco { padding: 1.5rem 1.25rem; }
+.palco iframe {
+  /* min() e nao max-width: com grid+max-width o iframe estourava para fora
+     da tela em viewport estreita, criando rolagem horizontal na pagina */
+  display: block; margin: 0 auto;
+  width: min(1000px, 100%); aspect-ratio: 4/3;
+  border: 1px solid var(--borda); border-radius: 4px; background: #000;
+  box-shadow: 0 0 0 1px #00f0ff33, 0 0 50px #00f0ff22;
+}
+.instrucoes {
+  max-width: 1000px; margin: 1.4rem auto 0; color: var(--suave);
+  font-size: .88rem; padding: 0 1.25rem; font-family: system-ui, sans-serif;
+}
+.instrucoes b { color: var(--amarelo); letter-spacing: .06em; }
+footer {
+  text-align: center; color: var(--suave); font-size: .72rem;
+  letter-spacing: .12em; padding: 3rem 1rem;
+}

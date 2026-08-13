@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧸 Jogo da Memória</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        #app {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255,255,255,0.9);
+            border-radius: 40px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .tela { display: none; animation: entrar 0.5s ease; }
+        .tela.ativa { display: block; }
+        @keyframes entrar {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pular {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .logo-grande { text-align: center; font-size: 4em; animation: pular 2s infinite; }
+        .titulo { text-align: center; font-size: 2em; color: #e74c3c; }
+        .subtitulo { text-align: center; color: #7f8c8d; margin-bottom: 20px; }
+        .btn {
+            width: 100%; padding: 16px; border: none; border-radius: 20px;
+            font-size: 1.1em; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-bottom: 10px;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-facil { background: #2ecc71; color: #fff; }
+        .btn-medio { background: #f1c40f; color: #fff; }
+        .btn-dificil { background: #e74c3c; color: #fff; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .topo {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 3px dashed #f1c40f;
+            margin-bottom: 15px; font-weight: bold;
+        }
+        .tabuleiro {
+            display: grid; gap: 10px; margin: 15px 0;
+        }
+        .carta {
+            aspect-ratio: 1; border-radius: 20px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2.5em; cursor: pointer; transition: 0.3s;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            border: 4px solid rgba(255,255,255,0.3);
+            user-select: none; min-height: 70px;
+        }
+        .carta:active { transform: scale(0.9); }
+        .carta.virada {
+            background: #fff;
+            border-color: #f1c40f;
+        }
+        .carta.encontrada {
+            background: #2ecc71;
+            border-color: #fff;
+            cursor: default;
+            animation: pular 0.5s ease;
+        }
+        .carta.erro { animation: treme 0.4s ease; border-color: #e74c3c; }
+        @keyframes treme {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .botoes-jogo {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+        .botoes-jogo button {
+            flex: 1; padding: 14px; border: none; border-radius: 16px;
+            font-size: 1em; font-weight: bold; cursor: pointer;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+        }
+        .botoes-jogo button:active { transform: scale(0.95); }
+        .btn-voltar { background: #bdc3c7; }
+        .btn-reiniciar { background: #f1c40f; }
+        .resultado { text-align: center; padding: 20px 0; }
+        .resultado .trofeu { font-size: 4em; animation: pular 1.5s infinite; }
+        .resultado h2 { font-size: 2em; color: #e74c3c; }
+        .resultado .estrelas { font-size: 3em; margin: 10px 0; }
+        .resultado .info-box {
+            background: rgba(0,0,0,0.05); border-radius: 20px;
+            padding: 15px; margin: 10px 0;
+        }
+        .resultado .info-box .linha {
+            display: flex; justify-content: space-between;
+            padding: 5px 0; font-size: 1.1em;
+        }
+        .resultado .info-box .linha span { font-weight: bold; color: #e74c3c; }
+        .btn-jogar-novamente {
+            background: #2ecc71; color: #fff; padding: 16px;
+            border: none; border-radius: 20px; font-size: 1.2em;
+            font-weight: bold; cursor: pointer; width: 100%;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+        }
+        .btn-jogar-novamente:hover { transform: translateY(-3px); }
+        .fogos { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 999; overflow: hidden; }
+        .fogo { position: absolute; font-size: 2em; animation: sobe 2s ease-out forwards; }
+        @keyframes sobe {
+            0% { transform: translateY(100vh) scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.5) rotate(720deg); opacity: 0; }
+        }
+        @media (max-width: 500px) {
+            .carta { font-size: 1.8em; min-height: 60px; }
+            .logo-grande { font-size: 3em; }
+            .titulo { font-size: 1.5em; }
+            .btn { font-size: 1em; padding: 14px; }
+            .botoes-jogo { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+
+    <!-- TELA INICIAL -->
+    <div id="tela-inicio" class="tela ativa">
+        <div class="logo-grande">🧸</div>
+        <div class="titulo">Jogo da Memória</div>
+        <p class="subtitulo">🐶 Encontre os pares! 🐱</p>
+        <button class="btn btn-facil" onclick="iniciarJogo(4)">🌟 Fácil - 4 pares</button>
+        <button class="btn btn-medio" onclick="iniciarJogo(6)">⭐ Médio - 6 pares</button>
+        <button class="btn btn-dificil" onclick="iniciarJogo(8)">🌈 Difícil - 8 pares</button>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="tela-jogo" class="tela">
+        <div class="topo">
+            <span>⏱️ <span id="timer">0</span>s</span>
+            <span>📌 <span id="pares">0</span>/<span id="total-pares">0</span></span>
+            <span>👆 <span id="tentativas">0</span></span>
+        </div>
+        <div class="tabuleiro" id="tabuleiro"></div>
+        <div class="botoes-jogo">
+            <button class="btn-reiniciar" onclick="reiniciarJogo()">🔄 Recomeçar</button>
+            <button class="btn-voltar" onclick="voltarInicio()">🏠 Sair</button>
+        </div>
+    </div>
+
+    <!-- TELA DE FIM -->
+    <div id="tela-fim" class="tela">
+        <div class="resultado">
+            <div class="trofeu" id="trofeu">🏆</div>
+            <h2 id="msg-fim">Parabéns!</h2>
+            <div class="estrelas" id="estrelas">⭐⭐⭐</div>
+            <div class="info-box">
+                <div class="linha"><span>⏱️ Tempo</span><span id="tempo-final">0</span></div>
+                <div class="linha"><span>👆 Tentativas</span><span id="tentativas-final">0</span></div>
+                <div class="linha"><span>📌 Pares</span><span id="pares-final">0</span></div>
+            </div>
+            <button class="btn-jogar-novamente" onclick="voltarInicio()">🎮 Jogar Novamente</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let cartas = [], cartasViradas = [], paresEncontrados = 0, totalPares = 0;
+let tentativas = 0, bloqueado = false, timer = 0, intervaloTimer = null;
+let jogoIniciado = false, nivelAtual = 4;
+
+const EMOJIS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🐣','🐺','🦄','🐴','🦋'];
+
+function mostrarTela(id) {
+    document.querySelectorAll('.tela').forEach(el => el.classList.remove('ativa'));
+    document.getElementById(id).classList.add('ativa');
+}
+
+function iniciarJogo(qtdPares) {
+    nivelAtual = qtdPares; totalPares = qtdPares; paresEncontrados = 0;
+    tentativas = 0; cartasViradas = []; bloqueado = false;
+    jogoIniciado = false; timer = 0;
+    if (intervaloTimer) { clearInterval(intervaloTimer); intervaloTimer = null; }
+
+    let emojisSelecionados = [];
+    for (let i = 0; i < qtdPares; i++) {
+        emojisSelecionados.push(EMOJIS[i]);
+        emojisSelecionados.push(EMOJIS[i]);
+    }
+    for (let i = emojisSelecionados.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [emojisSelecionados[i], emojisSelecionados[j]] = [emojisSelecionados[j], emojisSelecionados[i]];
+    }
+    cartas = emojisSelecionados.map((emoji, index) => ({ id: index, emoji, virada: false, encontrada: false }));
+
+    document.getElementById('total-pares').textContent = totalPares;
+    mostrarTela('tela-jogo');
+    desenharTabuleiro();
+    atualizarInfo();
+}
+
+function desenharTabuleiro() {
+    const tabuleiro = document.getElementById('tabuleiro');
+    let cols = 4;
+    tabuleiro.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    tabuleiro.innerHTML = '';
+    cartas.forEach((carta, index) => {
+        const div = document.createElement('div');
+        div.className = 'carta';
+        div.dataset.index = index;
+        if (carta.encontrada) {
+            div.textContent = carta.emoji;
+            div.classList.add('encontrada');
+        } else if (carta.virada) {
+            div.textContent = carta.emoji;
+            div.classList.add('virada');
+        } else {
+            div.textContent = '❓';
+        }
+        div.onclick = () => virarCarta(index);
+        tabuleiro.appendChild(div);
+    });
+    if (paresEncontrados === totalPares) {
+        setTimeout(() => fimDeJogo(), 500);
+    }
+}
+
+function virarCarta(index) {
+    if (bloqueado) return;
+    if (cartas[index].encontrada || cartas[index].virada) return;
+    if (cartasViradas.length >= 2) return;
+
+    if (!jogoIniciado) {
+        jogoIniciado = true;
+        timer = 0;
+        intervaloTimer = setInterval(() => { timer++; document.getElementById('timer').textContent = timer; }, 1000);
+    }
+
+    cartas[index].virada = true;
+    desenharTabuleiro();
+    cartasViradas.push(index);
+
+    if (cartasViradas.length === 2) {
+        tentativas++;
+        bloqueado = true;
+        atualizarInfo();
+        const idx1 = cartasViradas[0], idx2 = cartasViradas[1];
+        if (cartas[idx1].emoji === cartas[idx2].emoji) {
+            setTimeout(() => {
+                cartas[idx1].encontrada = true;
+                cartas[idx2].encontrada = true;
+                cartas[idx1].virada = false;
+                cartas[idx2].virada = false;
+                paresEncontrados++;
+                cartasViradas = [];
+                bloqueado = false;
+                desenharTabuleiro();
+                atualizarInfo();
+                if (paresEncontrados === totalPares) {
+                    setTimeout(() => fimDeJogo(), 600);
+                }
+            }, 400);
+        } else {
+            setTimeout(() => {
+                const el1 = document.querySelector(`.carta[data-index="${idx1}"]`);
+                const el2 = document.querySelector(`.carta[data-index="${idx2}"]`);
+                if (el1) el1.classList.add('erro');
+                if (el2) el2.classList.add('erro');
+                setTimeout(() => {
+                    cartas[idx1].virada = false;
+                    cartas[idx2].virada = false;
+                    cartasViradas = [];
+                    bloqueado = false;
+                    desenharTabuleiro();
+                    atualizarInfo();
+                }, 400);
+            }, 600);
+        }
+    }
+}
+
+function atualizarInfo() {
+    document.getElementById('pares').textContent = paresEncontrados;
+    document.getElementById('tentativas').textContent = tentativas;
+}
+
+function reiniciarJogo() {
+    if (intervaloTimer) { clearInterval(intervaloTimer); intervaloTimer = null; }
+    iniciarJogo(nivelAtual);
+}
+
+function voltarInicio() {
+    if (intervaloTimer) { clearInterval(intervaloTimer); intervaloTimer = null; }
+    mostrarTela('tela-inicio');
+}
+
+function fimDeJogo() {
+    if (intervaloTimer) { clearInterval(intervaloTimer); intervaloTimer = null; }
+    let estrelas = 3;
+    const tentativasIdeais = totalPares * 1.8;
+    if (tentativas > tentativasIdeais * 2.5) estrelas = 1;
+    else if (tentativas > tentativasIdeais) estrelas = 2;
+
+    const emojisEstrelas = ['⭐', '⭐⭐', '⭐⭐⭐'];
+    const mensagens = [
+        'Bom trabalho! Continue praticando! 💪',
+        'Muito bem! Você é muito inteligente! 🧠',
+        'Excelente! Você é um campeão! 🏆'
+    ];
+    const trofeus = ['🎯', '🏅', '🏆'];
+
+    document.getElementById('trofeu').textContent = trofeus[estrelas - 1];
+    document.getElementById('msg-fim').textContent = mensagens[estrelas - 1];
+    document.getElementById('estrelas').textContent = emojisEstrelas[estrelas - 1];
+    document.getElementById('tempo-final').textContent = timer + 's';
+    document.getElementById('tentativas-final').textContent = tentativas;
+    document.getElementById('pares-final').textContent = totalPares;
+    mostrarTela('tela-fim');
+
+    if (estrelas === 3) {
+        const container = document.createElement('div');
+        container.className = 'fogos';
+        document.body.appendChild(container);
+        const emojis = ['🎆','🎇','✨','⭐','🌟','🎉','🎊'];
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const fogo = document.createElement('div');
+                fogo.className = 'fogo';
+                fogo.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                fogo.style.left = Math.random() * 100 + '%';
+                fogo.style.fontSize = (1.5 + Math.random() * 2.5) + 'em';
+                fogo.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+                container.appendChild(fogo);
+                setTimeout(() => fogo.remove(), 3000);
+            }, i * 100);
+        }
+        setTimeout(() => container.remove(), 4000);
+    }
+}
+</script>
+
+</body>
+</html>

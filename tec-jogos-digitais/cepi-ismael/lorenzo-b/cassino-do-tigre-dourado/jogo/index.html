@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐯 Cassino do Tigre Dourado</title>
+    <style>
+        /* ==================== RESET ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* ==================== CONTAINER PRINCIPAL ==================== */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: linear-gradient(145deg, #1a0e05, #2d1a0a);
+            border-radius: 25px;
+            padding: 30px;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.2), inset 0 0 60px rgba(255, 215, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* ==================== DECORAÇÃO DE FUNDO ==================== */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            animation: glow 10s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+        
+        /* ==================== CABEÇALHO ==================== */
+        .header {
+            text-align: center;
+            padding: 20px 0 30px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            letter-spacing: 2px;
+        }
+        
+        .header .subtitle {
+            color: #FFA500;
+            font-size: 1.1rem;
+            margin-top: 5px;
+            letter-spacing: 4px;
+        }
+        
+        .header .mascotes {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .header .mascote-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .header .mascote-item .emoji {
+            font-size: 1.8rem;
+        }
+        
+        /* ==================== SALDO ==================== */
+        .saldo-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 15px 30px;
+            text-align: center;
+            margin: 0 auto 30px auto;
+            max-width: 400px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+        
+        .saldo-box .label {
+            color: #FFD700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .saldo-box .valor {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        /* ==================== MENU ==================== */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(145deg, #0d7a3e, #0a5f30);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 20px 10px;
+            color: #FFD700;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .menu-btn:hover::after {
+            opacity: 1;
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+            background: linear-gradient(145deg, #0f904a, #0d7a3e);
+        }
+        
+        .menu-btn .emoji {
+            font-size: 2.5rem;
+        }
+        
+        .menu-btn .nome {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* ==================== ÁREA DO JOGO ==================== */
+        .game-area {
+            display: none;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .game-area.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ==================== BOTÃO VOLTAR ==================== */
+        .btn-voltar {
+            background: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-voltar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 0, 0.4);
+        }
+        
+        /* ==================== JOGO ROLETA ==================== */
+        .roleta-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3px;
+            margin: 15px 0;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .roleta-numero {
+            padding: 8px 4px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .roleta-numero:hover {
+            transform: scale(1.1);
+        }
+        
+        .verde { background: #0d7a3e; }
+        .vermelho { background: #DC143C; }
+        .preto { background: #1a1a1a; border: 1px solid #333; }
+        
+        /* ==================== CONTROLES ==================== */
+        .controles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            align-items: center;
+        }
+        
+        .controles label {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .controles input, .controles select {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 8px 15px;
+            color: white;
+            font-size: 1rem;
+            width: 120px;
+            transition: all 0.3s;
+        }
+        
+        .controles input:focus, .controles select:focus {
+            outline: none;
+            border-color: #FF6B00;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        .btn-jogar {
+            background: #FFD700;
+            color: #1a0e05;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-jogar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        /* ==================== RESULTADO ==================== */
+        .resultado {
+            text-align: center;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .resultado.ganhou {
+            border-color: #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+        
+        .resultado.perdeu {
+            border-color: #DC143C;
+            box-shadow: 0 0 30px rgba(220, 20, 60, 0.2);
+        }
+        
+        .resultado .destaque {
+            font-size: 2.5rem;
+        }
+        
+        /* ==================== CAÇA-NÍQUEL ==================== */
+        .caca-niquel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .coluna {
+            background: #1a1a1a;
+            border: 3px solid #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 80px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .coluna .simbolo {
+            font-size: 3rem;
+            line-height: 1.2;
+            transition: all 0.3s;
+        }
+        
+        /* ==================== DADOS ==================== */
+        .dados {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 5rem;
+        }
+        
+        .dado {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+            min-width: 100px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .dado.animar {
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+        
+        /* ==================== PÔQUER ==================== */
+        .mao {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        .carta {
+            font-size: 3.5rem;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+            min-width: 70px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .carta:hover {
+            transform: scale(1.1);
+        }
+        
+        .mao-label {
+            color: #FFD700;
+            font-size: 0.9rem;
+            text-align: center;
+            margin: 5px 0;
+            letter-spacing: 2px;
+        }
+        
+        /* ==================== ROLETA DA SORTE ==================== */
+        .roleta-sorte {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .opcao-sorte {
+            font-size: 2.5rem;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 70px;
+            text-align: center;
+        }
+        
+        .opcao-sorte:hover {
+            transform: scale(1.1);
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .opcao-sorte.selecionado {
+            background: #FFD700;
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+        
+        .roleta-sorte-grande {
+            font-size: 6rem;
+            text-align: center;
+            margin: 20px 0;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            border: 3px solid #FFD700;
+            transition: all 0.3s;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* ==================== BACARÁ ==================== */
+        .bacara-mesa {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .bacara-lado {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+            min-width: 150px;
+        }
+        
+        .bacara-lado .nome {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .bacara-lado .valor {
+            font-size: 3rem;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* ==================== RESPONSIVO ==================== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .menu-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+            
+            .menu-btn {
+                min-height: 100px;
+                padding: 15px 5px;
+            }
+            
+            .menu-btn .emoji {
+                font-size: 2rem;
+            }
+            
+            .roleta-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 2px;
+            }
+            
+            .controles {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .controles input, .controles select {
+                width: 100%;
+            }
+            
+            .caca-niquel {
+                gap: 10px;
+            }
+            
+            .coluna {
+                min-width: 60px;
+                min-height: 200px;
+                padding: 10px;
+            }
+            
+            .coluna .simbolo {
+                font-size: 2.2rem;
+            }
+            
+            .dados {
+                font-size: 3.5rem;
+                gap: 20px;
+            }
+            
+            .dado {
+                min-width: 70px;
+                padding: 15px;
+            }
+            
+            .carta {
+                font-size: 2.5rem;
+                min-width: 50px;
+            }
+            
+            .bacara-mesa {
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .menu-btn {
+                min-height: 80px;
+                padding: 10px 5px;
+            }
+            
+            .menu-btn .emoji {
+                font-size: 1.5rem;
+            }
+            
+            .menu-btn .nome {
+                font-size: 0.7rem;
+            }
+            
+            .roleta-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 2px;
+            }
+            
+            .roleta-numero {
+                font-size: 0.7rem;
+                padding: 5px 2px;
+            }
+            
+            .saldo-box .valor {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- ==================== CABEÇALHO ==================== -->
+        <div class="header">
+            <h1>🐯 CASSINO DO TIGRE DOURADO 🐯</h1>
+            <div class="subtitle">🐂 Fortuna e Prosperidade 🐉</div>
+            <div class="mascotes">
+                <div class="mascote-item">
+                    <span class="emoji">🐯</span>
+                    <span>Tigre Dourado</span>
+                </div>
+                <div class="mascote-item">
+                    <span class="emoji">🐂</span>
+                    <span>Boi da Fortuna</span>
+                </div>
+                <div class="mascote-item">
+                    <span class="emoji">🐉</span>
+                    <span>Dragão Imperial</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== SALDO ==================== -->
+        <div class="saldo-box">
+            <div class="label">💰 Saldo</div>
+            <div class="valor" id="saldo">R$ 1.000,00</div>
+        </div>
+        
+        <!-- ==================== MENU ==================== -->
+        <div id="menu">
+            <div class="menu-grid">
+                <div class="menu-btn" onclick="abrirJogo('roleta')">
+                    <span class="emoji">🎰</span>
+                    <span class="nome">Roleta Europeia</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐯</span>
+                </div>
+                <div class="menu-btn" onclick="abrirJogo('dados')">
+                    <span class="emoji">🎲</span>
+                    <span class="nome">Dados Chineses</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐂</span>
+                </div>
+                <div class="menu-btn" onclick="abrirJogo('caca-niquel')">
+                    <span class="emoji">🎰</span>
+                    <span class="nome">Caça-Níquel</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐉</span>
+                </div>
+                <div class="menu-btn" onclick="abrirJogo('vermelho-preto')">
+                    <span class="emoji">🔴</span>
+                    <span class="nome">Vermelho/Preto</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐯</span>
+                </div>
+                <div class="menu-btn" onclick="abrirJogo('poker')">
+                    <span class="emoji">🃏</span>
+                    <span class="nome">Pôquer Chinês</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐂</span>
+                </div>
+                <div class="menu-btn" onclick="abrirJogo('bacara')">
+                    <span class="emoji">🀄</span>
+                    <span class="nome">Bacará Oriental</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐉</span>
+                </div>
+                <div class="menu-btn" onclick="abrirJogo('roleta-sorte')">
+                    <span class="emoji">🎯</span>
+                    <span class="nome">Roleta da Sorte</span>
+                    <span style="font-size:0.7rem;color:#FFA500;">🐯</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== ÁREA DOS JOGOS ==================== -->
+        <div id="game-area" class="game-area">
+            <div id="game-content"></div>
+            <div style="text-align:center;">
+                <button class="btn-voltar" onclick="voltarMenu()">🔙 Voltar ao Menu</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ==================== JOGADOR ====================
+        let jogador = {
+            saldo: 1000,
+            historico: [],
+            
+            apostar(valor) {
+                if (valor > this.saldo) return false;
+                this.saldo -= valor;
+                return true;
+            },
+            
+            ganhar(valor) {
+                this.saldo += valor;
+                this.historico.push(`Ganhou R$ ${valor.toFixed(2)}`);
+            },
+            
+            perder(valor) {
+                this.historico.push(`Perdeu R$ ${valor.toFixed(2)}`);
+            },
+            
+            atualizarSaldo() {
+                document.getElementById('saldo').textContent = `R$ ${this.saldo.toFixed(2)}`;
+            }
+        };
+        
+        // ==================== FUNÇÕES GERAIS ====================
+        function abrirJogo(jogo) {
+            document.getElementById('menu').style.display = 'none';
+            const area = document.getElementById('game-area');
+            area.classList.add('active');
+            
+            const content = document.getElementById('game-content');
+            
+            switch(jogo) {
+                case 'roleta': content.innerHTML = criarRoleta(); break;
+                case 'dados': content.innerHTML = criarDados(); break;
+                case 'caca-niquel': content.innerHTML = criarCacaNiquel(); break;
+                case 'vermelho-preto': content.innerHTML = criarVermelhoPreto(); break;
+                case 'poker': content.innerHTML = criarPoker(); break;
+                case 'bacara': content.innerHTML = criarBacara(); break;
+                case 'roleta-sorte': content.innerHTML = criarRoletaSorte(); break;
+            }
+        }
+        
+        function voltarMenu() {
+            document.getElementById('game-area').classList.remove('active');
+            document.getElementById('menu').style.display = 'block';
+            document.getElementById('game-content').innerHTML = '';
+        }
+        
+        function mostrarResultado(elemento, mensagem, tipo) {
+            elemento.innerHTML = mensagem;
+            elemento.className = 'resultado ' + tipo;
+        }
+        
+        // ==================== JOGO 1: ROLETA EUROPEIA ====================
+        function criarRoleta() {
+            const numeros = Array.from({length: 37}, (_, i) => i);
+            const cores = {
+                0: 'verde',
+                1: 'vermelho', 2: 'preto', 3: 'vermelho', 4: 'preto',
+                5: 'vermelho', 6: 'preto', 7: 'vermelho', 8: 'preto',
+                9: 'vermelho', 10: 'preto', 11: 'preto', 12: 'vermelho',
+                13: 'preto', 14: 'vermelho', 15: 'preto', 16: 'vermelho',
+                17: 'preto', 18: 'vermelho', 19: 'vermelho', 20: 'preto',
+                21: 'vermelho', 22: 'preto', 23: 'vermelho', 24: 'preto',
+                25: 'vermelho', 26: 'preto', 27: 'vermelho', 28: 'preto',
+                29: 'preto', 30: 'vermelho', 31: 'preto', 32: 'vermelho',
+                33: 'preto', 34: 'vermelho', 35: 'preto', 36: 'vermelho'
+            };
+            
+            let html = `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🎰 Roleta Europeia 🐯</h2>
+                <div class="roleta-grid">
+            `;
+            
+            numeros.forEach(num => {
+                html += `<div class="roleta-numero ${cores[num]}" onclick="roletaApostarNumero(${num})">${num}</div>`;
+            });
+            
+            html += `
+                </div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="roleta-aposta" value="10" min="1" step="1">
+                    <label>🎯 Número:</label>
+                    <input type="number" id="roleta-numero" value="0" min="0" max="36">
+                    <button class="btn-jogar" onclick="roletaGirar()">🎰 GIRAR</button>
+                </div>
+                <div id="roleta-resultado" class="resultado">Escolha um número e clique em GIRAR</div>
+                <div style="text-align:center;margin-top:10px;color:#FFA500;font-size:0.9rem;">
+                    💰 Número exato paga 35x o valor da aposta!
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        function roletaApostarNumero(num) {
+            document.getElementById('roleta-numero').value = num;
+        }
+        
+        function roletaGirar() {
+            const aposta = parseFloat(document.getElementById('roleta-aposta').value);
+            const numeroApostado = parseInt(document.getElementById('roleta-numero').value);
+            const resultado = document.getElementById('roleta-resultado');
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (isNaN(numeroApostado) || numeroApostado < 0 || numeroApostado > 36) {
+                mostrarResultado(resultado, '❌ Número deve estar entre 0 e 36!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            // Girar
+            const numero = Math.floor(Math.random() * 37);
+            const cores = {0: 'Verde', 1: 'Vermelho', 2: 'Preto'};
+            
+            if (jogador.apostar(aposta)) {
+                if (numero === numeroApostado) {
+                    const ganho = aposta * 35;
+                    jogador.ganhar(ganho + aposta);
+                    mostrarResultado(resultado, 
+                        `🎉 PARABÉNS! Número ${numero}! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 
+                        'ganhou'
+                    );
+                } else {
+                    jogador.perder(aposta);
+                    mostrarResultado(resultado, 
+                        `😞 O número foi ${numero}. Perdeu R$ ${aposta.toFixed(2)}`, 
+                        'perdeu'
+                    );
+                }
+            }
+            
+            jogador.atualizarSaldo();
+        }
+        
+        // ==================== JOGO 2: DADOS CHINESES ====================
+        function criarDados() {
+            return `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🎲 Dados Chineses 🐂</h2>
+                <div class="dados">
+                    <div class="dado" id="dado1">⚀</div>
+                    <div class="dado" id="dado2">⚀</div>
+                </div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="dados-aposta" value="10" min="1" step="1">
+                    <button class="btn-jogar" onclick="dadosLancar()">🎲 LANÇAR</button>
+                </div>
+                <div id="dados-resultado" class="resultado">Clique em LANÇAR para jogar os dados!</div>
+                <div style="text-align:center;margin-top:10px;color:#FFA500;font-size:0.9rem;">
+                    🎯 Soma 7 ou 11 = Ganha 2x | Soma 2, 3 ou 12 = Perde
+                </div>
+            `;
+        }
+        
+        function dadosLancar() {
+            const aposta = parseFloat(document.getElementById('dados-aposta').value);
+            const resultado = document.getElementById('dados-resultado');
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            const dados = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            const d1 = Math.floor(Math.random() * 6) + 1;
+            const d2 = Math.floor(Math.random() * 6) + 1;
+            
+            document.getElementById('dado1').textContent = dados[d1-1];
+            document.getElementById('dado2').textContent = dados[d2-1];
+            document.getElementById('dado1').classList.add('animar');
+            document.getElementById('dado2').classList.add('animar');
+            setTimeout(() => {
+                document.getElementById('dado1').classList.remove('animar');
+                document.getElementById('dado2').classList.remove('animar');
+            }, 500);
+            
+            if (jogador.apostar(aposta)) {
+                const soma = d1 + d2;
+                if (soma === 7 || soma === 11) {
+                    const ganho = aposta * 2;
+                    jogador.ganhar(ganho + aposta);
+                    mostrarResultado(resultado, `🎉 Soma ${soma}! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 'ganhou');
+                } else if (soma === 2 || soma === 3 || soma === 12) {
+                    jogador.perder(aposta);
+                    mostrarResultado(resultado, `😞 Soma ${soma}! Perdeu R$ ${aposta.toFixed(2)}`, 'perdeu');
+                } else {
+                    jogador.ganhar(aposta);
+                    mostrarResultado(resultado, `Soma ${soma}. Empate!`, 'ganhou');
+                }
+            }
+            
+            jogador.atualizarSaldo();
+        }
+        
+        // ==================== JOGO 3: CAÇA-NÍQUEL ====================
+        function criarCacaNiquel() {
+            return `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🎰 Caça-Níquel 🐉</h2>
+                <div class="caca-niquel">
+                    <div class="coluna" id="coluna1">
+                        <div class="simbolo">🎰</div>
+                        <div class="simbolo">🎰</div>
+                        <div class="simbolo">🎰</div>
+                    </div>
+                    <div class="coluna" id="coluna2">
+                        <div class="simbolo">🎰</div>
+                        <div class="simbolo">🎰</div>
+                        <div class="simbolo">🎰</div>
+                    </div>
+                    <div class="coluna" id="coluna3">
+                        <div class="simbolo">🎰</div>
+                        <div class="simbolo">🎰</div>
+                        <div class="simbolo">🎰</div>
+                    </div>
+                </div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="caca-aposta" value="10" min="1" step="1">
+                    <button class="btn-jogar" onclick="cacaGirar()">🎰 GIRAR</button>
+                </div>
+                <div id="caca-resultado" class="resultado">Clique em GIRAR para jogar!</div>
+                <div style="text-align:center;margin-top:10px;color:#FFA500;font-size:0.9rem;">
+                    🐯 Jackpot 50x | 7️⃣💎 20x | 🔔 10x | Outros 5x
+                </div>
+            `;
+        }
+        
+        function cacaGirar() {
+            const aposta = parseFloat(document.getElementById('caca-aposta').value);
+            const resultado = document.getElementById('caca-resultado');
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            const simbolos = ['🍒', '🍋', '🍊', '🍇', '🔔', '💎', '7️⃣', '🐯'];
+            const colunas = [];
+            
+            for (let i = 0; i < 3; i++) {
+                const coluna = [];
+                for (let j = 0; j < 3; j++) {
+                    const sim = simbolos[Math.floor(Math.random() * simbolos.length)];
+                    coluna.push(sim);
+                }
+                colunas.push(coluna);
+            }
+            
+            // Atualizar visual
+            for (let i = 0; i < 3; i++) {
+                const colunaDiv = document.getElementById(`coluna${i+1}`);
+                const simbolosDiv = colunaDiv.querySelectorAll('.simbolo');
+                simbolosDiv.forEach((div, j) => {
+                    div.textContent = colunas[i][j];
+                });
+            }
+            
+            if (jogador.apostar(aposta)) {
+                // Verificar combinações
+                let ganhou = false;
+                let ganho = 0;
+                
+                for (let linha = 0; linha < 3; linha++) {
+                    if (colunas[0][linha] === colunas[1][linha] && colunas[1][linha] === colunas[2][linha]) {
+                        const sim = colunas[0][linha];
+                        if (sim === '🐯') ganho = aposta * 50;
+                        else if (sim === '7️⃣' || sim === '💎') ganho = aposta * 20;
+                        else if (sim === '🔔') ganho = aposta * 10;
+                        else ganho = aposta * 5;
+                        ganhou = true;
+                        break;
+                    }
+                }
+                
+                if (ganhou) {
+                    jogador.ganhar(ganho + aposta);
+                    mostrarResultado(resultado, `🎉 JACKPOT! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 'ganhou');
+                } else {
+                    jogador.perder(aposta);
+                    mostrarResultado(resultado, `😞 Tente novamente! Perdeu R$ ${aposta.toFixed(2)}`, 'perdeu');
+                }
+            }
+            
+            jogador.atualizarSaldo();
+        }
+        
+        // ==================== JOGO 4: VERMELHO/PRETO ====================
+        function criarVermelhoPreto() {
+            return `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🔴⚫ Vermelho/Preto 🐯</h2>
+                <div style="text-align:center;font-size:6rem;margin:20px 0;" id="vp-roleta">⚫</div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="vp-aposta" value="10" min="1" step="1">
+                    <label>🎯 Cor:</label>
+                    <select id="vp-cor">
+                        <option value="Vermelho">🔴 Vermelho</option>
+                        <option value="Preto">⚫ Preto</option>
+                    </select>
+                    <button class="btn-jogar" onclick="vpGirar()">🎰 GIRAR</button>
+                </div>
+                <div id="vp-resultado" class="resultado">Escolha uma cor e clique em GIRAR!</div>
+                <div style="text-align:center;margin-top:10px;color:#FFA500;font-size:0.9rem;">
+                    🔴 Vermelho ou ⚫ Preto - Ganha 1x o valor da aposta!
+                </div>
+            `;
+        }
+        
+        function vpGirar() {
+            const aposta = parseFloat(document.getElementById('vp-aposta').value);
+            const corApostada = document.getElementById('vp-cor').value;
+            const resultado = document.getElementById('vp-resultado');
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            const numero = Math.floor(Math.random() * 37);
+            let cor = '';
+            let emoji = '';
+            
+            if (numero === 0) {
+                cor = 'Verde';
+                emoji = '🟢';
+            } else if ([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(numero)) {
+                cor = 'Vermelho';
+                emoji = '🔴';
+            } else {
+                cor = 'Preto';
+                emoji = '⚫';
+            }
+            
+            document.getElementById('vp-roleta').textContent = emoji;
+            
+            if (jogador.apostar(aposta)) {
+                if (cor === corApostada) {
+                    const ganho = aposta;
+                    jogador.ganhar(ganho + aposta);
+                    mostrarResultado(resultado, `🎉 ${cor}! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 'ganhou');
+                } else {
+                    jogador.perder(aposta);
+                    mostrarResultado(resultado, `😞 ${cor}! Perdeu R$ ${aposta.toFixed(2)}`, 'perdeu');
+                }
+            }
+            
+            jogador.atualizarSaldo();
+        }
+        
+        // ==================== JOGO 5: PÔQUER CHINÊS ====================
+        function criarPoker() {
+            return `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🃏 Pôquer Chinês 🐂</h2>
+                <div class="mao-label">Sua mão</div>
+                <div class="mao" id="poker-jogador">
+                    ${Array(5).fill('🂠').map(c => `<div class="carta">${c}</div>`).join('')}
+                </div>
+                <div class="mao-label">Mão do adversário</div>
+                <div class="mao" id="poker-cpu">
+                    ${Array(5).fill('🂠').map(c => `<div class="carta">${c}</div>`).join('')}
+                </div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="poker-aposta" value="10" min="1" step="1">
+                    <button class="btn-jogar" onclick="pokerJogar()">🃏 JOGAR</button>
+                </div>
+                <div id="poker-resultado" class="resultado">Clique em JOGAR para começar!</div>
+            `;
+        }
+        
+        function pokerJogar() {
+            const aposta = parseFloat(document.getElementById('poker-aposta').value);
+            const resultado = document.getElementById('poker-resultado');
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            const cartas = ['🂡', '🂢', '🂣', '🂤', '🂥', '🂦', '🂧', '🂨', '🂩', '🂪', '🂫', '🂭', '🂮'];
+            const jogadorCartas = [];
+            const cpuCartas = [];
+            
+            // Embaralhar e distribuir
+            const cartasEmbaralhadas = [...cartas];
+            for (let i = cartasEmbaralhadas.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cartasEmbaralhadas[i], cartasEmbaralhadas[j]] = [cartasEmbaralhadas[j], cartasEmbaralhadas[i]];
+            }
+            
+            for (let i = 0; i < 5; i++) {
+                jogadorCartas.push(cartasEmbaralhadas[i]);
+                cpuCartas.push(cartasEmbaralhadas[i + 5]);
+            }
+            
+            // Atualizar visual
+            const jogadorDiv = document.getElementById('poker-jogador');
+            const cpuDiv = document.getElementById('poker-cpu');
+            jogadorDiv.innerHTML = jogadorCartas.map(c => `<div class="carta">${c}</div>`).join('');
+            cpuDiv.innerHTML = cpuCartas.map(c => `<div class="carta">${c}</div>`).join('');
+            
+            if (jogador.apostar(aposta)) {
+                // Avaliar (simplificado)
+                const valorJogador = jogadorCartas.reduce((sum, c) => sum + c.charCodeAt(0), 0);
+                const valorCPU = cpuCartas.reduce((sum, c) => sum + c.charCodeAt(0), 0);
+                
+                if (valorJogador > valorCPU) {
+                    const ganho = aposta * 1.5;
+                    jogador.ganhar(ganho + aposta);
+                    mostrarResultado(resultado, `🎉 Você venceu! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 'ganhou');
+                } else {
+                    jogador.perder(aposta);
+                    mostrarResultado(resultado, `😞 CPU venceu! Perdeu R$ ${aposta.toFixed(2)}`, 'perdeu');
+                }
+            }
+            
+            jogador.atualizarSaldo();
+        }
+        
+        // ==================== JOGO 6: BACARÁ ORIENTAL ====================
+        function criarBacara() {
+            return `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🀄 Bacará Oriental 🐉</h2>
+                <div class="bacara-mesa">
+                    <div class="bacara-lado">
+                        <div class="nome">👤 Jogador</div>
+                        <div class="valor" id="bacara-jogador">🂠 🂠</div>
+                    </div>
+                    <div class="bacara-lado">
+                        <div class="nome">🏦 Banco</div>
+                        <div class="valor" id="bacara-banco">🂠 🂠</div>
+                    </div>
+                </div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="bacara-aposta" value="10" min="1" step="1">
+                    <label>🎯 Apostar em:</label>
+                    <select id="bacara-alvo">
+                        <option value="Jogador">👤 Jogador</option>
+                        <option value="Banco">🏦 Banco</option>
+                    </select>
+                    <button class="btn-jogar" onclick="bacaraJogar()">🀄 JOGAR</button>
+                </div>
+                <div id="bacara-resultado" class="resultado">Clique em JOGAR para começar!</div>
+            `;
+        }
+        
+        function bacaraJogar() {
+            const aposta = parseFloat(document.getElementById('bacara-aposta').value);
+            const alvo = document.getElementById('bacara-alvo').value;
+            const resultado = document.getElementById('bacara-resultado');
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            const jogadorValor = (Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10)) % 10;
+            const bancoValor = (Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10)) % 10;
+            
+            document.getElementById('bacara-jogador').textContent = `🃏 ${jogadorValor}`;
+            document.getElementById('bacara-banco').textContent = `🃏 ${bancoValor}`;
+            
+            if (jogador.apostar(aposta)) {
+                if ((alvo === 'Jogador' && jogadorValor > bancoValor) ||
+                    (alvo === 'Banco' && bancoValor > jogadorValor)) {
+                    const ganho = aposta;
+                    jogador.ganhar(ganho + aposta);
+                    mostrarResultado(resultado, `🎉 ${alvo} venceu! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 'ganhou');
+                } else if (jogadorValor === bancoValor) {
+                    jogador.ganhar(aposta);
+                    mostrarResultado(resultado, '🤝 Empate!', 'ganhou');
+                } else {
+                    jogador.perder(aposta);
+                    mostrarResultado(resultado, `😞 ${alvo} perdeu! Perdeu R$ ${aposta.toFixed(2)}`, 'perdeu');
+                }
+            }
+            
+            jogador.atualizarSaldo();
+        }
+        
+        // ==================== JOGO 7: ROLETA DA SORTE ====================
+        function criarRoletaSorte() {
+            const opcoes = ['🐯', '🐂', '🐉', '💰', '⭐', '🎰'];
+            
+            return `
+                <h2 style="text-align:center;color:#FFD700;margin-bottom:20px;">🎯 Roleta da Sorte 🐯</h2>
+                <div class="roleta-sorte-grande" id="rs-roleta">🎯</div>
+                <div class="roleta-sorte" id="rs-opcoes">
+                    ${opcoes.map(o => `<div class="opcao-sorte" onclick="rsSelecionar('${o}')" id="rs-${o}">${o}</div>`).join('')}
+                </div>
+                <div style="text-align:center;color:#FFA500;margin:10px 0;" id="rs-escolha">Escolha um símbolo acima</div>
+                <div class="controles">
+                    <label>💵 Aposta: R$</label>
+                    <input type="number" id="rs-aposta" value="10" min="1" step="1">
+                    <button class="btn-jogar" onclick="rsGirar()">🎯 GIRAR</button>
+                </div>
+                <div id="rs-resultado" class="resultado">Escolha um símbolo e clique em GIRAR!</div>
+                <div style="text-align:center;margin-top:10px;color:#FFA500;font-size:0.9rem;">
+                    🐯💰 Paga 3x | Outros símbolos pagam 2x
+                </div>
+            `;
+        }
+        
+        let rsEscolha = null;
+        
+        function rsSelecionar(opcao) {
+            rsEscolha = opcao;
+            document.querySelectorAll('.opcao-sorte').forEach(el => el.classList.remove('selecionado'));
+            document.getElementById(`rs-${opcao}`).classList.add('selecionado');
+            document.getElementById('rs-escolha').textContent = `✅ Escolheu: ${opcao}`;
+        }
+        
+        function rsGirar() {
+            const aposta = parseFloat(document.getElementById('rs-aposta').value);
+            const resultado = document.getElementById('rs-resultado');
+            const opcoes = ['🐯', '🐂', '🐉', '💰', '⭐', '🎰'];
+            
+            if (!rsEscolha) {
+                mostrarResultado(resultado, '❌ Escolha um símbolo primeiro!', 'perdeu');
+                return;
+            }
+            
+            if (isNaN(aposta) || aposta <= 0) {
+                mostrarResultado(resultado, '❌ Digite um valor de aposta válido!', 'perdeu');
+                return;
+            }
+            
+            if (aposta > jogador.saldo) {
+                mostrarResultado(resultado, `❌ Saldo insuficiente! Você tem R$ ${jogador.saldo.toFixed(2)}`, 'perdeu');
+                return;
+            }
+            
+            // Girar animação
+            const roleta = document.getElementById('rs-roleta');
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    roleta.textContent = opcoes[Math.floor(Math.random() * opcoes.length)];
+                }, i * 200);
+            }
+            
+            setTimeout(() => {
+                const resultadoFinal = opcoes[Math.floor(Math.random() * opcoes.length)];
+                roleta.textContent = resultadoFinal;
+                
+                if (jogador.apostar(aposta)) {
+                    if (resultadoFinal === rsEscolha) {
+                        const ganho = (resultadoFinal === '🐯' || resultadoFinal === '💰') ? aposta * 3 : aposta * 2;
+                        jogador.ganhar(ganho + aposta);
+                        mostrarResultado(resultado, `🎉 ACERTOU! Ganhou R$ ${ganho.toFixed(2)}! 🎉`, 'ganhou');
+                    } else {
+                        jogador.perder(aposta);
+                        mostrarResultado(resultado, `😞 Saiu ${resultadoFinal}! Perdeu R$ ${aposta.toFixed(2)}`, 'perdeu');
+                    }
+                }
+                
+                jogador.atualizarSaldo();
+                rsEscolha = null;
+                document.querySelectorAll('.opcao-sorte').forEach(el => el.classList.remove('selecionado'));
+                document.getElementById('rs-escolha').textContent = 'Escolha um símbolo acima';
+            }, 1200);
+        }
+        
+        // ==================== INICIALIZAR ====================
+        jogador.atualizarSaldo();
+        
+        // Adicionar evento de tecla Enter para os jogos
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                // Verificar qual jogo está ativo e chamar a função correspondente
+                const btns = document.querySelectorAll('.btn-jogar');
+                if (btns.length > 0) {
+                    btns[0].click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
