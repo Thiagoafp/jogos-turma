@@ -1,4 +1,9 @@
 {
   "nome": "Exemplo da Turma",
-  "turma": "2026/1"
+  "turma": "2026/1",
+  "estudio": "NEON PIXEL STUDIO",
+  "lema": "Dois jogos, duas engines, o mesmo desafio: pegue as moedas e sobreviva.",
+  "avatar": "avatar.svg",
+  "banner": "banner.svg",
+  "cor": ""
 }

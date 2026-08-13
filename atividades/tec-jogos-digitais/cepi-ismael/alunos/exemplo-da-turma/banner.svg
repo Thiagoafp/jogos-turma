@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a0b3d"/>
+      <stop offset="1" stop-color="#4a1170"/>
+    </linearGradient>
+    <linearGradient id="sol" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd23c"/>
+      <stop offset="1" stop-color="#ff2e97"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="320" fill="url(#ceu)"/>
+
+  <!-- estrelas -->
+  <g fill="#ffffff" opacity=".7">
+    <rect x="90"  y="40" width="3" height="3"/>
+    <rect x="240" y="70" width="2" height="2"/>
+    <rect x="380" y="30" width="3" height="3"/>
+    <rect x="520" y="60" width="2" height="2"/>
+    <rect x="900" y="45" width="3" height="3"/>
+    <rect x="1050" y="80" width="2" height="2"/>
+    <rect x="1130" y="35" width="3" height="3"/>
+  </g>
+
+  <!-- sol listrado, marca do synthwave -->
+  <clipPath id="corte"><rect x="480" y="70" width="240" height="130"/></clipPath>
+  <g clip-path="url(#corte)">
+    <circle cx="600" cy="190" r="118" fill="url(#sol)"/>
+    <g fill="#1a0b3d">
+      <rect x="480" y="150" width="240" height="6"/>
+      <rect x="480" y="164" width="240" height="8"/>
+      <rect x="480" y="182" width="240" height="10"/>
+    </g>
+  </g>
+
+  <!-- horizonte e grade em perspectiva -->
+  <rect x="0" y="200" width="1200" height="2" fill="#00f0ff"/>
+  <g stroke="#00f0ff" stroke-width="1.5" opacity=".65" fill="none">
+    <path d="M600 202 L-200 320"/><path d="M600 202 L100 320"/>
+    <path d="M600 202 L350 320"/><path d="M600 202 L520 320"/>
+    <path d="M600 202 L680 320"/><path d="M600 202 L850 320"/>
+    <path d="M600 202 L1100 320"/><path d="M600 202 L1400 320"/>
+    <path d="M0 216 H1200"/><path d="M0 236 H1200"/>
+    <path d="M0 262 H1200"/><path d="M0 294 H1200"/>
+  </g>
+</svg>

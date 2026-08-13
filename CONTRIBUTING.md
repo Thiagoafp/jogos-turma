@@ -1,21 +1,70 @@
 # Como entregar o seu jogo
 
 Sua entrega é um **pull request** neste repositório. Quando ele for aceito, o
-jogo aparece na galeria automaticamente, em poucos minutos.
+jogo aparece no site automaticamente, em poucos minutos.
 
 ## O contrato
 
-Você cria **uma pasta** dentro de `jogos/` com o seu nome e o do jogo:
+Você tem um **estúdio** — uma pasta com o seu nome — e dentro dele **uma pasta
+por jogo**:
 
 ```
-jogos/maria-silva-corrida-espacial/
+atividades/tec-jogos-digitais/cepi-ismael/alunos/
+  maria-s/                    ← o seu estúdio
+    aluno.json                ← identidade do estúdio (nome, avatar, banner)
+    avatar.png
+    banner.png
+    corrida-espacial/         ← um jogo
+      jogo.json
+      index.html
+    fuga-do-labirinto/        ← outro jogo seu
+      jogo.json
+      ...
 ```
 
-O nome da pasta usa só **letras minúsculas, números e hífen**. Nada de
-espaço, acento ou maiúscula.
+Nomes de pasta usam só **letras minúsculas, números e hífen**. Nada de espaço,
+acento ou maiúscula.
 
-Dentro dela vão duas coisas: o **`jogo.json`** (a ficha do jogo) e os
-**arquivos do jogo**, que mudam conforme a engine.
+## A cara do seu estúdio
+
+O `aluno.json` é o que dá identidade à sua página. Copie de
+`modelos/aluno.json`. **Tudo aqui é opcional** menos o nome — quem não
+configurar nada ganha uma capa colorida com as iniciais.
+
+```json
+{
+  "nome": "Maria S.",
+  "turma": "2026/1",
+  "estudio": "NEON PIXEL STUDIO",
+  "lema": "Jogos rápidos, difíceis e coloridos.",
+  "avatar": "avatar.png",
+  "banner": "banner.png",
+  "cor": "#7f5af0"
+}
+```
+
+- **`estudio`** — o nome que aparece grande na sua página. Capriche: é a sua
+  marca.
+- **`lema`** — uma frase curta (até 160 letras) que diz do que são seus jogos.
+- **`avatar`** — a sua "cara": imagem **quadrada**, pelo menos 128×128. É ela
+  que aparece no card do estúdio e no topo da sua página.
+- **`banner`** — a arte de abertura, **larga**, algo como 1200×320. É o fundo
+  do topo da sua página. O nome do estúdio é escrito por cima, então evite
+  colocar texto importante na parte de baixo da imagem.
+- **`cor`** — sua cor de destaque em `#RRGGBB`, usada quando você não tem
+  banner.
+
+Formatos aceitos: `.png`, `.jpg`, `.webp` e `.svg`, até 4 MB cada. Os arquivos
+ficam na **sua pasta de estúdio**, não dentro da pasta de um jogo.
+
+Dá para desenhar o avatar no próprio Construct, no Piskel ou em qualquer
+editor de pixel art. Veja `alunos/exemplo-da-turma/` — o avatar e o banner de
+lá são SVG feitos à mão, e você pode abrir para ver como foram montados.
+
+## A ficha de cada jogo
+
+Dentro da pasta de cada jogo vai o **`jogo.json`** e os **arquivos do jogo**,
+que mudam conforme a engine.
 
 ## O `jogo.json`
 
@@ -46,12 +95,12 @@ Salve o arquivo em **UTF-8**. Se o acento aparecer como `Ã§`, está errado.
 
 No Construct: **Menu → Export → Web (HTML5)**. Ele gera uma pasta com
 `index.html` e vários arquivos. Commite **todo o conteúdo** dessa pasta
-direto dentro da sua pasta em `jogos/`.
+direto dentro da pasta do jogo, no seu estudio.
 
 Não commite o arquivo `.c3p` do projeto — ele não roda no navegador.
 
 ```
-jogos/seu-nome-seu-jogo/
+alunos/maria-s/corrida-espacial/
   jogo.json
   index.html          ← precisa estar aqui, na raiz
   data.json
@@ -129,7 +178,7 @@ E abra <http://localhost:8080>.
 ## Abrindo o pull request
 
 1. Faça um **fork** deste repositório (botão "Fork", canto superior direito).
-2. Crie sua pasta em `jogos/` e adicione os arquivos.
+2. Crie a pasta do seu jogo dentro do seu estudio e adicione os arquivos.
 3. Commite e envie para o seu fork.
 4. Clique em **"Compare & pull request"** e descreva seu jogo em uma frase.
 
@@ -141,6 +190,6 @@ Depois que o professor aceitar, o jogo entra no ar automaticamente.
 ## Limites
 
 - Até **25 MB por arquivo** e **60 MB por pasta**. Comprima imagens e sons.
-- Só mexa na **sua** pasta. PR que altera a pasta de outro aluno é recusado.
+- Só mexa no **seu** estúdio. PR que altera a pasta de outro aluno é recusado.
 - O jogo é público: qualquer pessoa com o link joga, inclusive os pais. Não
   coloque nada que você não mostraria em sala.

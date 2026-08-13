@@ -110,10 +110,18 @@ def carregar_alunos() -> list[dict]:
                     continue
 
                 jogos.sort(key=lambda j: str(j.get("titulo", "")).lower())
+                nome = ficha.get("nome", dir_aluno.name)
                 alunos.append({
                     "slug": dir_aluno.name,
-                    "nome": ficha.get("nome", dir_aluno.name),
+                    "pasta": dir_aluno,
+                    "nome": nome,
                     "turma": ficha.get("turma", escola.get("turma", "")),
+                    # identidade do estudio, configurada pelo proprio aluno
+                    "estudio": ficha.get("estudio", "") or f"Estudio {nome}",
+                    "lema": ficha.get("lema", ""),
+                    "cor": ficha.get("cor", ""),
+                    "avatar": ficha.get("avatar", ""),
+                    "banner": ficha.get("banner", ""),
                     "curso": nome_curso,
                     "curso_slug": dir_curso.name,
                     "escola": nome_escola,
@@ -343,6 +351,56 @@ header.topo p { margin: .9rem 0 0; color: var(--suave); font-size: .9rem; }
 }
 .carta:hover .jogar { background: var(--neon); }
 
+/* abertura do estudio */
+.hero {
+  position: relative; min-height: 260px;
+  background-size: cover; background-position: center;
+  border-bottom: 1px solid var(--borda);
+  display: flex; align-items: flex-end;
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px),
+    linear-gradient(transparent 20%, #06060fdd 92%);
+}
+.hero-conteudo {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; gap: 1.4rem; flex-wrap: wrap;
+  max-width: 1220px; margin: 0 auto; padding: 2rem 1.25rem 1.6rem; width: 100%;
+}
+.hero h2 {
+  margin: 0; font-size: clamp(1.4rem, 4vw, 2.2rem); color: #fff;
+  letter-spacing: .1em; text-shadow: 0 0 10px var(--neon), 0 0 34px #0088ff77;
+}
+.hero .creditos {
+  margin: .5rem 0 0; color: var(--suave); font-size: .78rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.hero .lema {
+  margin: .6rem 0 0; color: var(--amarelo); font-size: .95rem;
+  font-family: system-ui, sans-serif; font-style: italic; max-width: 60ch;
+}
+
+.avatar, .avatar-mini {
+  display: grid; place-items: center; overflow: hidden; flex: none;
+  font-weight: 800; color: #fff; background: var(--carta);
+}
+.avatar {
+  width: 132px; height: 132px; border-radius: 6px; font-size: 2.6rem;
+  border: 2px solid var(--neon);
+  box-shadow: 0 0 24px #00f0ff66, 0 10px 30px #000a;
+}
+.avatar-mini {
+  position: absolute; left: 1rem; bottom: 1rem; z-index: 1;
+  width: 62px; height: 62px; border-radius: 5px; font-size: 1.2rem;
+  border: 2px solid var(--neon); box-shadow: 0 0 16px #00f0ff55;
+}
+.avatar img, .avatar-mini img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.capa-estudio { position: relative; }
+
 .vazio {
   text-align: center; color: var(--suave); padding: 4rem 1rem;
   letter-spacing: .1em;
@@ -433,6 +491,38 @@ def capa_html(jogo: dict, chave: str, indice: int, prefixo: str) -> str:
     )
 
 
+def gradiente_do_aluno(aluno: dict) -> tuple[str, str]:
+    """Cor estavel por aluno: nao muda quando outro entra na lista."""
+    if aluno.get("cor"):
+        return aluno["cor"], aluno["cor"]
+    return GRADIENTES[sum(map(ord, aluno["slug"])) % len(GRADIENTES)]
+
+
+def arquivo_estudio(aluno: dict, campo: str) -> str | None:
+    """Caminho publicado do avatar/banner, ou None se o aluno nao mandou."""
+    nome = aluno.get(campo)
+    if not nome:
+        return None
+    if not (aluno["pasta"] / nome).exists():
+        return None
+    chave = f'{aluno["curso_slug"]}--{aluno["escola_slug"]}--{aluno["slug"]}'
+    return f"estudios/{chave}-{campo}{Path(nome).suffix.lower()}"
+
+
+def avatar_html(aluno: dict, prefixo: str, classe: str = "avatar") -> str:
+    arquivo = arquivo_estudio(aluno, "avatar")
+    if arquivo:
+        return (
+            f'<div class="{classe}">'
+            f'<img src="{esc(prefixo + arquivo)}" alt="" loading="lazy"></div>'
+        )
+    a, b = gradiente_do_aluno(aluno)
+    return (
+        f'<div class="{classe}" style="background:linear-gradient(135deg,{a},{b})">'
+        f'{esc(iniciais(aluno["nome"]))}</div>'
+    )
+
+
 def chave_do_jogo(aluno: dict, jogo: dict) -> str:
     return f'{aluno["curso_slug"]}--{aluno["escola_slug"]}--{aluno["slug"]}--{jogo["slug"]}'
 
@@ -464,16 +554,25 @@ def montar_indice(alunos: list[dict]) -> str:
                 grupo_atual = grupo
 
             n = len(aluno["jogos"])
-            a, b = GRADIENTES[len(secoes) % len(GRADIENTES)]
+            banner = arquivo_estudio(aluno, "banner")
+            a, b = gradiente_do_aluno(aluno)
+            fundo = (
+                f'background-image:url({esc(banner)});background-size:cover;'
+                "background-position:center"
+                if banner
+                else f"background:linear-gradient(135deg,{a},{b})"
+            )
             secoes.append(f"""
       <a class="carta" href="{esc(caminho_do_aluno(aluno))}/">
-        <div class="capa" style="background:linear-gradient(135deg,{a},{b})"
-             >{esc(iniciais(aluno["nome"]))}</div>
+        <div class="capa capa-estudio" style="{fundo}">
+          {avatar_html(aluno, "", "avatar-mini")}
+        </div>
         <div class="corpo">
-          <h3>{esc(aluno["nome"])}</h3>
-          <div class="autor">{esc(aluno["turma"])}</div>
-          <p class="desc">{n} {"jogo" if n == 1 else "jogos"} publicado{"" if n == 1 else "s"}.</p>
-          <div class="jogar">Ver os jogos</div>
+          <h3>{esc(aluno["estudio"])}</h3>
+          <div class="autor">{esc(aluno["nome"])} &middot; {esc(aluno["turma"])}</div>
+          <p class="desc">{esc(aluno["lema"]) or
+             f'{n} {"jogo" if n == 1 else "jogos"} publicado{"" if n == 1 else "s"}.'}</p>
+          <div class="jogar">Ver os {n} {"jogo" if n == 1 else "jogos"}</div>
         </div>
       </a>""")
         secoes.append("</div></section>")
@@ -518,23 +617,51 @@ def montar_loja(aluno: dict) -> str:
       </a>""")
 
     n = len(aluno["jogos"])
+    prefixo = "../../../"
+
+    banner = arquivo_estudio(aluno, "banner")
+    a, b = gradiente_do_aluno(aluno)
+    fundo_hero = (
+        f"background-image:url({esc(prefixo + banner)})"
+        if banner
+        else f"background-image:linear-gradient(120deg,{a},{b})"
+    )
+    lema = (
+        f'<p class="lema">&ldquo;{esc(aluno["lema"])}&rdquo;</p>'
+        if aluno.get("lema")
+        else ""
+    )
+
     corpo = f"""
 <div class="barra">
   <div>
-    <h1>{esc(aluno['nome'])}</h1>
-    <div class="autor">{esc(aluno['escola'])} &middot; {esc(aluno['turma'])}</div>
+    <h1>{esc(aluno['estudio'])}</h1>
+    <div class="autor">{esc(aluno['nome'])} &middot; {esc(aluno['escola'])}</div>
   </div>
-  <a class="voltar" href="../../../index.html">&larr; todos os alunos</a>
+  <a class="voltar" href="{prefixo}index.html">&larr; todos os estudios</a>
 </div>
+
+<div class="hero" style="{fundo_hero}">
+  <div class="hero-conteudo">
+    {avatar_html(aluno, prefixo)}
+    <div>
+      <h2>{esc(aluno['estudio'])}</h2>
+      <p class="creditos">{esc(aluno['nome'])} &middot; {esc(aluno['escola'])}
+         &middot; {esc(aluno['turma'])}</p>
+      {lema}
+    </div>
+  </div>
+</div>
+
 {trilha("Atividades", aluno["curso"], aluno["escola"], "Alunos", aluno["nome"])}
 <div class="envolucro">
   <section class="secao">
-    <h2>Jogos de {esc(aluno['nome'])}</h2>
+    <h2>Jogos do estudio</h2>
     <p class="sub">{n} {"titulo" if n == 1 else "titulos"} publicado{"" if n == 1 else "s"}</p>
     <div class="grade">{"".join(cartas)}</div>
   </section>
 </div>
-<footer><a href="../../../index.html">Voltar para a lista de alunos</a></footer>
+<footer><a href="{prefixo}index.html">Voltar para a lista de estudios</a></footer>
 """
     return pagina(f"{aluno['nome']} - {TITULO_SITE}", corpo, prefixo="../../../")
 
@@ -583,6 +710,7 @@ def construir(pular_pygame: bool = False) -> int:
     if SAIDA.exists():
         shutil.rmtree(SAIDA)
     (SAIDA / "capas").mkdir(parents=True)
+    (SAIDA / "estudios").mkdir(parents=True)
     (SAIDA / "estilo.css").write_text(ESTILO, encoding="utf-8")
 
     alunos = carregar_alunos()
@@ -631,6 +759,15 @@ def construir(pular_pygame: bool = False) -> int:
         if jogos_ok:
             visivel = dict(aluno, jogos=jogos_ok)
             base.mkdir(parents=True, exist_ok=True)
+
+            # avatar e banner do estudio, quando o aluno configurou
+            for campo in ("avatar", "banner"):
+                destino_rel = arquivo_estudio(aluno, campo)
+                if destino_rel:
+                    shutil.copy2(
+                        aluno["pasta"] / aluno[campo], SAIDA / destino_rel
+                    )
+
             (base / "index.html").write_text(montar_loja(visivel), encoding="utf-8")
             publicados.append(visivel)
 

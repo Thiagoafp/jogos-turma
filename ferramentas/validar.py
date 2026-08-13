@@ -22,7 +22,13 @@ PASTA_ATIVIDADES = RAIZ / "atividades"
 ENGINES = {"html", "construct", "pygame", "scratch"}
 CAMPOS = ["titulo", "autor", "turma", "engine", "descricao", "controles"]
 SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-IMAGENS = {".png", ".jpg", ".jpeg", ".webp"}
+IMAGENS = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
+
+# avatar e banner do estudio: o quadrado do perfil e a arte de abertura
+CAMPOS_ESTUDIO = {
+    "avatar": "quadrada, pelo menos 128x128",
+    "banner": "larga, algo como 1200x320",
+}
 
 LIMITE_ARQUIVO_MB = 25
 LIMITE_PASTA_MB = 60
@@ -233,6 +239,59 @@ def validar_jogo(pasta: Path) -> Problemas:
     return p
 
 
+def validar_estudio(dir_aluno: Path) -> Problemas:
+    """Confere o aluno.json: identidade do estudio, avatar e banner.
+
+    Tudo aqui e opcional - quem nao configurar nada ganha uma capa gerada
+    com as iniciais. So reclamamos do que esta declarado e errado.
+    """
+    p = Problemas()
+    arquivo = dir_aluno / "aluno.json"
+
+    if not arquivo.exists():
+        p.aviso(
+            "sem aluno.json: o estudio vai aparecer com o nome da pasta e uma "
+            "capa gerada. Copie de modelos/aluno.json para personalizar."
+        )
+        return p
+
+    try:
+        dados = json.loads(arquivo.read_text(encoding="utf-8"))
+    except UnicodeDecodeError:
+        p.erro("aluno.json precisa estar salvo em UTF-8")
+        return p
+    except json.JSONDecodeError as e:
+        p.erro(f"aluno.json com erro de sintaxe na linha {e.lineno}: {e.msg}")
+        return p
+
+    if not str(dados.get("nome", "")).strip():
+        p.erro('aluno.json: falta o campo "nome"')
+
+    if len(str(dados.get("lema", ""))) > 160:
+        p.aviso("o lema esta longo; o ideal e caber numa linha (ate 160 letras)")
+
+    cor = str(dados.get("cor", "")).strip()
+    if cor and not re.fullmatch(r"#[0-9a-fA-F]{6}", cor):
+        p.erro(f'aluno.json: cor "{cor}" invalida. Use o formato #RRGGBB, '
+               "por exemplo #7f5af0")
+
+    for campo, formato in CAMPOS_ESTUDIO.items():
+        nome = str(dados.get(campo, "")).strip()
+        if not nome:
+            continue
+        imagem = dir_aluno / nome
+        if not imagem.exists():
+            p.erro(f'aluno.json aponta o {campo} "{nome}", mas o arquivo nao '
+                   "esta na sua pasta")
+        elif imagem.suffix.lower() not in IMAGENS:
+            p.erro(f"o {campo} precisa ser {', '.join(sorted(IMAGENS))}")
+        elif mb(imagem) > 4:
+            p.erro(f"o {campo} tem {mb(imagem):.1f} MB; comprima para menos de "
+                   f"4 MB (imagem {formato})")
+
+    return p
+
+
 def localizar_jogos() -> list[Path]:
     """atividades/<curso>/<escola>/alunos/<aluno>/<jogo>/"""
     encontrados = []
@@ -260,6 +319,17 @@ def main() -> int:
         return 0
 
     total_erros = 0
+
+    for dir_aluno in sorted({p.parent for p in pastas}):
+        p = validar_estudio(dir_aluno)
+        total_erros += len(p.erros)
+        if p.erros or p.avisos:
+            print(f"\n[estudio] {dir_aluno.name}")
+            for e in p.erros:
+                print(f"     ERRO: {e}")
+            for a in p.avisos:
+                print(f"     aviso: {a}")
+
     for pasta in pastas:
         p = validar_jogo(pasta)
         total_erros += len(p.erros)
