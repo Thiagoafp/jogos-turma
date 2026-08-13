@@ -29,11 +29,11 @@ from datetime import date
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-PASTA_JOGOS = RAIZ / "jogos"
+PASTA_ATIVIDADES = RAIZ / "atividades"
 SAIDA = RAIZ / "site"
 
-TITULO_SITE = "Jogos da Turma"
-SUBTITULO = "Projetos criados pelos alunos - clique para jogar no navegador"
+TITULO_SITE = "ARCADE DA TURMA"
+SUBTITULO = "Jogos criados pelos alunos - escolha um e jogue no navegador"
 
 CORES_ENGINE = {
     "pygame": ("#3776ab", "Python / pygame"),
@@ -58,27 +58,72 @@ def esc(texto: object) -> str:
 # ---------------------------------------------------------------- leitura
 
 
-def carregar_jogos() -> list[dict]:
-    jogos = []
-    if not PASTA_JOGOS.exists():
-        return jogos
+def _ler_json(arquivo: Path) -> dict:
+    try:
+        return json.loads(arquivo.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError):
+        return {}
 
-    for pasta in sorted(d for d in PASTA_JOGOS.iterdir() if d.is_dir()):
-        arquivo = pasta / "jogo.json"
-        if not arquivo.exists():
-            print(f"  ! {pasta.name}: sem jogo.json, ignorando")
-            continue
-        try:
-            dados = json.loads(arquivo.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            print(f"  ! {pasta.name}: jogo.json invalido ({e}), ignorando")
-            continue
-        dados["slug"] = pasta.name
-        dados["pasta"] = pasta
-        jogos.append(dados)
 
-    jogos.sort(key=lambda j: str(j.get("titulo", "")).lower())
-    return jogos
+def carregar_alunos() -> list[dict]:
+    """Percorre atividades/<curso>/<escola>/alunos/<aluno>/<jogo>/.
+
+    A hierarquia existe para escalar: hoje e um curso numa escola, amanha
+    entram o TDS e o CEPI Buritis sem mexer em nada. Cada nivel carrega seu
+    proprio json com o nome bonito (com acento e maiuscula), enquanto a
+    pasta fica em slug - que e o que vai para a URL.
+
+    Um aluno tem VARIOS jogos: a pasta dele e uma prateleira, nao um jogo.
+    """
+    alunos = []
+    if not PASTA_ATIVIDADES.exists():
+        return alunos
+
+    for dir_curso in sorted(d for d in PASTA_ATIVIDADES.iterdir() if d.is_dir()):
+        curso = _ler_json(dir_curso / "curso.json")
+        nome_curso = curso.get("nome", dir_curso.name)
+
+        for dir_escola in sorted(d for d in dir_curso.iterdir() if d.is_dir()):
+            escola = _ler_json(dir_escola / "escola.json")
+            nome_escola = escola.get("nome", dir_escola.name)
+
+            dir_alunos = dir_escola / "alunos"
+            if not dir_alunos.is_dir():
+                continue
+
+            for dir_aluno in sorted(d for d in dir_alunos.iterdir() if d.is_dir()):
+                ficha = _ler_json(dir_aluno / "aluno.json")
+                jogos = []
+
+                for pasta in sorted(d for d in dir_aluno.iterdir() if d.is_dir()):
+                    if not (pasta / "jogo.json").exists():
+                        continue
+                    dados = _ler_json(pasta / "jogo.json")
+                    if not dados:
+                        print(f"  ! {dir_aluno.name}/{pasta.name}: jogo.json invalido")
+                        continue
+                    dados["slug"] = pasta.name
+                    dados["pasta"] = pasta
+                    jogos.append(dados)
+
+                if not jogos:
+                    continue
+
+                jogos.sort(key=lambda j: str(j.get("titulo", "")).lower())
+                alunos.append({
+                    "slug": dir_aluno.name,
+                    "nome": ficha.get("nome", dir_aluno.name),
+                    "turma": ficha.get("turma", escola.get("turma", "")),
+                    "curso": nome_curso,
+                    "curso_slug": dir_curso.name,
+                    "escola": nome_escola,
+                    "escola_slug": dir_escola.name,
+                    "jogos": jogos,
+                })
+
+    alunos.sort(key=lambda a: (a["curso_slug"], a["escola_slug"],
+                               a["nome"].lower()))
+    return alunos
 
 
 # ---------------------------------------------------------------- engines
@@ -180,82 +225,163 @@ CONSTRUTORES = {
 
 ESTILO = """
 :root {
-  --fundo: #0d1020; --carta: #171b33; --borda: #262c4d;
-  --texto: #eef0ff; --suave: #a3a9cc; --destaque: #ffd23c;
+  --fundo: #06060f; --carta: #12122a; --borda: #2a2a5c;
+  --texto: #eef0ff; --suave: #9aa0cc;
+  --neon: #00f0ff; --magenta: #ff2e97; --amarelo: #ffd23c;
 }
 * { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--fundo); color: var(--texto);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  line-height: 1.5;
-}
-a { color: inherit; text-decoration: none; }
-.envolucro { max-width: 1200px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
 
-header.topo { text-align: center; padding: 3rem 1rem 2.5rem; }
-header.topo h1 {
-  margin: 0; font-size: clamp(2rem, 6vw, 3.2rem); letter-spacing: -.02em;
+body {
+  margin: 0; color: var(--texto); line-height: 1.5;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background:
+    radial-gradient(ellipse at 50% -10%, #1a1150 0%, transparent 60%),
+    linear-gradient(var(--fundo), #0a0a18);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
-header.topo p { margin: .6rem 0 0; color: var(--suave); }
+/* grade em perspectiva no rodape, tipo cenario de arcade */
+body::before {
+  content: ""; position: fixed; inset: auto 0 0 0; height: 45vh; z-index: -1;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 39px, #2a2a5c66 39px 40px),
+    repeating-linear-gradient(0deg, transparent 0 39px, #2a2a5c66 39px 40px);
+  transform: perspective(320px) rotateX(62deg);
+  transform-origin: bottom center;
+  mask-image: linear-gradient(transparent, #000 55%);
+  pointer-events: none;
+}
+/* linhas de varredura de monitor CRT */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 999; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+  opacity: .5;
+}
+
+a { color: inherit; text-decoration: none; }
+.envolucro { max-width: 1220px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+header.topo { text-align: center; padding: 3.5rem 1rem 1rem; }
+header.topo h1 {
+  margin: 0; font-size: clamp(1.7rem, 5.5vw, 3rem);
+  letter-spacing: .12em; font-weight: 800; color: #fff;
+  text-shadow: 0 0 6px var(--neon), 0 0 22px var(--neon), 0 0 48px #0088ff88;
+  animation: piscar 5s infinite;
+}
+@keyframes piscar {
+  0%,96%,100% { opacity: 1 } 97% { opacity: .55 } 98% { opacity: 1 }
+}
+header.topo p { margin: .9rem 0 0; color: var(--suave); font-size: .9rem; }
+
+/* trilha da hierarquia: Atividades > Curso > Escola > Alunos */
+.trilha {
+  text-align: center; color: var(--suave); font-size: .72rem;
+  letter-spacing: .18em; text-transform: uppercase; padding: 1.5rem 1rem .5rem;
+}
+.trilha b { color: var(--neon); font-weight: 600; }
+.trilha span { opacity: .45; margin: 0 .5rem; }
+
+.secao { margin-top: 2.5rem; }
+.secao h2 {
+  margin: 0 0 .2rem; font-size: 1rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--magenta);
+  text-shadow: 0 0 12px #ff2e9766;
+}
+.secao .sub {
+  margin: 0 0 1.4rem; color: var(--suave); font-size: .78rem;
+  letter-spacing: .14em; text-transform: uppercase;
+  border-bottom: 1px solid var(--borda); padding-bottom: .8rem;
+}
 
 .grade {
-  display: grid; gap: 1.4rem;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  display: grid; gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
 }
 
 .carta {
-  background: var(--carta); border: 1px solid var(--borda);
-  border-radius: 14px; overflow: hidden;
+  position: relative; background: var(--carta);
+  border: 1px solid var(--borda); border-radius: 4px; overflow: hidden;
   display: flex; flex-direction: column;
-  transition: transform .15s ease, border-color .15s ease;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
 }
-.carta:hover { transform: translateY(-4px); border-color: var(--destaque); }
+.carta:hover {
+  transform: translateY(-6px); border-color: var(--neon);
+  box-shadow: 0 0 0 1px var(--neon), 0 0 28px #00f0ff55, 0 16px 40px #000a;
+}
 .carta .capa {
-  aspect-ratio: 16/10; display: grid; place-items: center;
-  font-size: 2.6rem; font-weight: 700; color: #fff;
-  text-shadow: 0 2px 12px rgba(0,0,0,.35);
+  aspect-ratio: 16/10; display: grid; place-items: center; position: relative;
+  font-size: 2.8rem; font-weight: 800; color: #fff; letter-spacing: .08em;
+  text-shadow: 0 3px 18px rgba(0,0,0,.45);
+}
+.carta .capa::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, rgba(0,0,0,.22) 0 2px, transparent 2px 4px);
 }
 .carta .capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.carta .corpo { padding: 1rem 1.1rem 1.2rem; flex: 1; display: flex;
-                flex-direction: column; gap: .45rem; }
-.carta h2 { margin: 0; font-size: 1.15rem; }
-.carta .autor { color: var(--suave); font-size: .92rem; }
-.carta .desc { color: var(--suave); font-size: .88rem; flex: 1; }
+.carta .corpo {
+  padding: 1rem 1.1rem 1.2rem; flex: 1;
+  display: flex; flex-direction: column; gap: .5rem;
+}
+.carta h3 { margin: 0; font-size: 1.05rem; color: #fff; letter-spacing: .02em; }
+.carta .autor { color: var(--neon); font-size: .8rem; letter-spacing: .08em; }
+.carta .desc {
+  color: var(--suave); font-size: .82rem; flex: 1; line-height: 1.55;
+  font-family: system-ui, sans-serif;
+}
 .etiqueta {
-  align-self: flex-start; font-size: .72rem; font-weight: 600;
-  padding: .18rem .6rem; border-radius: 999px; color: #06121f;
+  align-self: flex-start; font-size: .62rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: .22rem .6rem; border-radius: 2px; color: #06060f;
 }
 .jogar {
-  margin-top: .4rem; text-align: center; font-weight: 600;
-  background: var(--destaque); color: #14161f;
-  padding: .55rem; border-radius: 9px;
+  margin-top: .5rem; text-align: center; font-weight: 700;
+  letter-spacing: .18em; font-size: .78rem;
+  background: var(--amarelo); color: #14161f;
+  padding: .6rem; border-radius: 2px;
+}
+.carta:hover .jogar { background: var(--neon); }
+
+.vazio {
+  text-align: center; color: var(--suave); padding: 4rem 1rem;
+  letter-spacing: .1em;
 }
 
 /* pagina de um jogo */
 .barra {
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-  padding: .9rem 1.25rem; background: var(--carta);
+  padding: .9rem 1.25rem; background: #0b0b1e;
   border-bottom: 1px solid var(--borda);
 }
-.barra h1 { margin: 0; font-size: 1.15rem; }
-.barra .autor { color: var(--suave); font-size: .9rem; }
-.barra .voltar { margin-left: auto; color: var(--suave); font-size: .92rem; }
-.barra .voltar:hover { color: var(--destaque); }
-.palco { padding: 1.25rem; }
+.barra h1 {
+  margin: 0; font-size: 1.05rem; color: #fff; letter-spacing: .06em;
+  text-shadow: 0 0 14px #00f0ff55;
+}
+.barra .autor { color: var(--suave); font-size: .76rem; letter-spacing: .1em; }
+.barra .voltar {
+  margin-left: auto; color: var(--suave); font-size: .74rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.barra .voltar:hover { color: var(--neon); }
+.palco { padding: 1.5rem 1.25rem; }
 .palco iframe {
   /* min() e nao max-width: com grid+max-width o iframe estourava para fora
      da tela em viewport estreita, criando rolagem horizontal na pagina */
   display: block; margin: 0 auto;
   width: min(1000px, 100%); aspect-ratio: 4/3;
-  border: 1px solid var(--borda); border-radius: 12px; background: #000;
+  border: 1px solid var(--borda); border-radius: 4px; background: #000;
+  box-shadow: 0 0 0 1px #00f0ff33, 0 0 50px #00f0ff22;
 }
 .instrucoes {
-  max-width: 1000px; margin: 1rem auto 0; color: var(--suave);
-  font-size: .93rem; padding: 0 1.25rem;
+  max-width: 1000px; margin: 1.4rem auto 0; color: var(--suave);
+  font-size: .88rem; padding: 0 1.25rem; font-family: system-ui, sans-serif;
 }
-.instrucoes b { color: var(--texto); }
-footer { text-align: center; color: var(--suave); font-size: .85rem;
-         padding: 2rem 1rem; }
+.instrucoes b { color: var(--amarelo); letter-spacing: .06em; }
+footer {
+  text-align: center; color: var(--suave); font-size: .72rem;
+  letter-spacing: .12em; padding: 3rem 1rem;
+}
 """
 
 
@@ -276,92 +402,178 @@ def pagina(titulo: str, corpo: str, prefixo: str = "") -> str:
 """
 
 
-def capa_html(jogo: dict, indice: int, prefixo: str) -> str:
+def trilha(*niveis: str) -> str:
+    """Atividades > Curso > Escola > Alunos, com o ultimo nivel destacado."""
+    partes = []
+    for i, nivel in enumerate(niveis):
+        if i:
+            partes.append("<span>&rsaquo;</span>")
+        marca = "b" if i == len(niveis) - 1 else "i"
+        partes.append(f"<{marca}>{esc(nivel)}</{marca}>")
+    return f'<div class="trilha">{"".join(partes)}</div>'
+
+
+def iniciais(texto: str) -> str:
+    palavras = [p for p in str(texto).split() if len(p) > 2]
+    if not palavras:
+        return str(texto)[:2].upper()
+    return "".join(p[0] for p in palavras[:2]).upper()
+
+
+def capa_html(jogo: dict, chave: str, indice: int, prefixo: str) -> str:
     capa = jogo.get("capa")
     if capa and (jogo["pasta"] / capa).exists():
-        arquivo = f"{prefixo}capas/{jogo['slug']}{Path(capa).suffix.lower()}"
+        arquivo = f"{prefixo}capas/{chave}{Path(capa).suffix.lower()}"
         return f'<div class="capa"><img src="{esc(arquivo)}" alt="" loading="lazy"></div>'
 
     a, b = GRADIENTES[indice % len(GRADIENTES)]
-    iniciais = "".join(p[0] for p in str(jogo.get("titulo", "?")).split()[:2]).upper()
     return (
         f'<div class="capa" style="background:linear-gradient(135deg,{a},{b})">'
-        f"{esc(iniciais)}</div>"
+        f'{esc(iniciais(jogo.get("titulo", "?")))}</div>'
     )
 
 
-def montar_galeria(jogos: list[dict]) -> str:
-    if not jogos:
-        corpo_grade = (
-            '<p style="text-align:center;color:var(--suave)">'
-            "Nenhum jogo publicado ainda.</p>"
-        )
-    else:
-        cartas = []
-        for i, jogo in enumerate(jogos):
-            cor, rotulo = CORES_ENGINE.get(jogo.get("engine", ""), ("#888", "Jogo"))
-            descricao = str(jogo.get("descricao", ""))[:300]
-            cartas.append(
-                f"""
-      <a class="carta" href="j/{esc(jogo['slug'])}.html">
-        {capa_html(jogo, i, "")}
-        <div class="corpo">
-          <span class="etiqueta" style="background:{cor}">{esc(rotulo)}</span>
-          <h2>{esc(jogo.get('titulo', 'Sem titulo'))}</h2>
-          <div class="autor">{esc(jogo.get('autor', ''))}</div>
-          <p class="desc">{esc(descricao)}</p>
-          <div class="jogar">Jogar</div>
-        </div>
-      </a>"""
-            )
-        corpo_grade = f'<div class="grade">{"".join(cartas)}</div>'
+def chave_do_jogo(aluno: dict, jogo: dict) -> str:
+    return f'{aluno["curso_slug"]}--{aluno["escola_slug"]}--{aluno["slug"]}--{jogo["slug"]}'
 
-    quantidade = len(jogos)
-    plural = "jogo" if quantidade == 1 else "jogos"
+
+def caminho_do_aluno(aluno: dict) -> str:
+    return f'{aluno["curso_slug"]}/{aluno["escola_slug"]}/{aluno["slug"]}'
+
+
+# ---------------------------------------------------------------- indice
+
+
+def montar_indice(alunos: list[dict]) -> str:
+    """Pagina inicial: a lista de ALUNOS, agrupada por curso e escola."""
+    if not alunos:
+        corpo_secoes = '<p class="vazio">Nenhum jogo publicado ainda.</p>'
+    else:
+        secoes = []
+        grupo_atual = None
+        for aluno in alunos:
+            grupo = (aluno["curso"], aluno["escola"])
+            if grupo != grupo_atual:
+                if grupo_atual is not None:
+                    secoes.append("</div></section>")
+                secoes.append(
+                    f'<section class="secao"><h2>{esc(aluno["curso"])}</h2>'
+                    f'<p class="sub">{esc(aluno["escola"])} &middot; Alunos</p>'
+                    f'<div class="grade">'
+                )
+                grupo_atual = grupo
+
+            n = len(aluno["jogos"])
+            a, b = GRADIENTES[len(secoes) % len(GRADIENTES)]
+            secoes.append(f"""
+      <a class="carta" href="{esc(caminho_do_aluno(aluno))}/">
+        <div class="capa" style="background:linear-gradient(135deg,{a},{b})"
+             >{esc(iniciais(aluno["nome"]))}</div>
+        <div class="corpo">
+          <h3>{esc(aluno["nome"])}</h3>
+          <div class="autor">{esc(aluno["turma"])}</div>
+          <p class="desc">{n} {"jogo" if n == 1 else "jogos"} publicado{"" if n == 1 else "s"}.</p>
+          <div class="jogar">Ver os jogos</div>
+        </div>
+      </a>""")
+        secoes.append("</div></section>")
+        corpo_secoes = "".join(secoes)
+
+    total = sum(len(a["jogos"]) for a in alunos)
     corpo = f"""
 <header class="topo">
-  <h1>&#127918; {esc(TITULO_SITE)}</h1>
+  <h1>{esc(TITULO_SITE)}</h1>
   <p>{esc(SUBTITULO)}</p>
 </header>
+{trilha("Atividades")}
 <div class="envolucro">
-  {corpo_grade}
+  {corpo_secoes}
 </div>
 <footer>
-  {quantidade} {plural} publicado(s) &middot; atualizado em
-  {date.today().strftime('%d/%m/%Y')}
+  {len(alunos)} aluno(s) &middot; {total} jogo(s) &middot;
+  atualizado em {date.today().strftime('%d/%m/%Y')}
 </footer>
 """
     return pagina(TITULO_SITE, corpo)
 
 
-def montar_pagina_jogo(jogo: dict) -> str:
+# ---------------------------------------------------------------- loja
+
+
+def montar_loja(aluno: dict) -> str:
+    """A vitrine do aluno: os jogos dele, com cara de loja."""
+    cartas = []
+    for i, jogo in enumerate(aluno["jogos"]):
+        cor, rotulo = CORES_ENGINE.get(jogo.get("engine", ""), ("#888", "Jogo"))
+        cartas.append(f"""
+      <a class="carta" href="{esc(jogo['slug'])}/">
+        {capa_html(jogo, chave_do_jogo(aluno, jogo), i, "../../../")}
+        <div class="corpo">
+          <span class="etiqueta" style="background:{cor}">{esc(rotulo)}</span>
+          <h3>{esc(jogo.get('titulo', 'Sem titulo'))}</h3>
+          <div class="autor">{esc(jogo.get('controles', ''))}</div>
+          <p class="desc">{esc(str(jogo.get('descricao', ''))[:300])}</p>
+          <div class="jogar">Jogar agora</div>
+        </div>
+      </a>""")
+
+    n = len(aluno["jogos"])
+    corpo = f"""
+<div class="barra">
+  <div>
+    <h1>{esc(aluno['nome'])}</h1>
+    <div class="autor">{esc(aluno['escola'])} &middot; {esc(aluno['turma'])}</div>
+  </div>
+  <a class="voltar" href="../../../index.html">&larr; todos os alunos</a>
+</div>
+{trilha("Atividades", aluno["curso"], aluno["escola"], "Alunos", aluno["nome"])}
+<div class="envolucro">
+  <section class="secao">
+    <h2>Jogos de {esc(aluno['nome'])}</h2>
+    <p class="sub">{n} {"titulo" if n == 1 else "titulos"} publicado{"" if n == 1 else "s"}</p>
+    <div class="grade">{"".join(cartas)}</div>
+  </section>
+</div>
+<footer><a href="../../../index.html">Voltar para a lista de alunos</a></footer>
+"""
+    return pagina(f"{aluno['nome']} - {TITULO_SITE}", corpo, prefixo="../../../")
+
+
+# ---------------------------------------------------------------- jogar
+
+
+def montar_pagina_jogo(aluno: dict, jogo: dict) -> str:
     cor, rotulo = CORES_ENGINE.get(jogo.get("engine", ""), ("#888", "Jogo"))
     corpo = f"""
 <div class="barra">
   <div>
     <h1>{esc(jogo.get('titulo', ''))}</h1>
-    <div class="autor">{esc(jogo.get('autor', ''))}
-      &middot; {esc(jogo.get('turma', ''))}</div>
+    <div class="autor">{esc(aluno['nome'])} &middot; {esc(aluno['escola'])}</div>
   </div>
   <span class="etiqueta" style="background:{cor}">{esc(rotulo)}</span>
-  <a class="voltar" href="../index.html">&larr; todos os jogos</a>
+  <a class="voltar" href="../index.html">&larr; jogos de {esc(aluno['nome'])}</a>
 </div>
+{trilha("Atividades", aluno["curso"], aluno["escola"], aluno["nome"],
+        str(jogo.get("titulo", "")))}
 
 <div class="palco">
-  <iframe src="../jogos/{esc(jogo['slug'])}/index.html"
-          title="{esc(jogo.get('titulo', ''))}"
+  <iframe src="jogo/index.html" title="{esc(jogo.get('titulo', ''))}"
           allow="autoplay; fullscreen; gamepad" allowfullscreen></iframe>
 </div>
 
 <div class="instrucoes">
   <p><b>Como jogar:</b> {esc(jogo.get('controles', ''))}</p>
   <p>{esc(jogo.get('descricao', ''))}</p>
-  <p style="font-size:.85rem;opacity:.7">Clique dentro do jogo antes de usar
+  <p style="font-size:.82rem;opacity:.7">Clique dentro do jogo antes de usar
      o teclado.</p>
 </div>
-<footer><a href="../index.html">Voltar para a galeria</a></footer>
+<footer><a href="../index.html">Voltar</a></footer>
 """
-    return pagina(f"{jogo.get('titulo', '')} - {TITULO_SITE}", corpo, prefixo="../")
+    return pagina(
+        f"{jogo.get('titulo', '')} - {aluno['nome']}",
+        corpo,
+        prefixo="../../../../",
+    )
 
 
 # ---------------------------------------------------------------- principal
@@ -370,51 +582,64 @@ def montar_pagina_jogo(jogo: dict) -> str:
 def construir(pular_pygame: bool = False) -> int:
     if SAIDA.exists():
         shutil.rmtree(SAIDA)
-    (SAIDA / "j").mkdir(parents=True)
     (SAIDA / "capas").mkdir(parents=True)
     (SAIDA / "estilo.css").write_text(ESTILO, encoding="utf-8")
 
-    jogos = carregar_jogos()
-    print(f"{len(jogos)} jogo(s) encontrado(s) em jogos/\n")
+    alunos = carregar_alunos()
+    total = sum(len(a["jogos"]) for a in alunos)
+    print(f"{len(alunos)} aluno(s), {total} jogo(s) em atividades/\n")
 
-    publicados = []
     falhas = 0
     pulados = 0
-    for jogo in jogos:
-        engine = jogo.get("engine", "")
-        print(f"  {jogo['slug']} ({engine})")
+    publicados: list[dict] = []
 
-        construtor = CONSTRUTORES.get(engine)
-        if construtor is None:
-            print(f"  ! engine desconhecida: {engine}")
-            falhas += 1
-            continue
-        # Pular por opcao NAO e falha: e o modo rapido usado na validacao de
-        # pull request. Contar como erro reprovaria todo PR do repositorio.
-        if engine == "pygame" and pular_pygame:
-            print("    pulado (--sem-pygame)")
-            pulados += 1
-            continue
+    for aluno in alunos:
+        base = SAIDA / caminho_do_aluno(aluno)
+        print(f"  {aluno['nome']} ({aluno['escola']})")
 
-        if not construtor(jogo, SAIDA / "jogos" / jogo["slug"]):
-            falhas += 1
-            continue
+        jogos_ok = []
+        for jogo in aluno["jogos"]:
+            engine = jogo.get("engine", "")
+            print(f"    - {jogo['slug']} ({engine})")
 
-        capa = jogo.get("capa")
-        if capa and (jogo["pasta"] / capa).exists():
-            destino = SAIDA / "capas" / f"{jogo['slug']}{Path(capa).suffix.lower()}"
-            shutil.copy2(jogo["pasta"] / capa, destino)
+            construtor = CONSTRUTORES.get(engine)
+            if construtor is None:
+                print(f"      ! engine desconhecida: {engine}")
+                falhas += 1
+                continue
+            # Pular por opcao NAO e falha: e o modo rapido usado na validacao
+            # de pull request. Contar como erro reprovaria todo PR.
+            if engine == "pygame" and pular_pygame:
+                print("      pulado (--sem-pygame)")
+                pulados += 1
+                continue
 
-        (SAIDA / "j" / f"{jogo['slug']}.html").write_text(
-            montar_pagina_jogo(jogo), encoding="utf-8"
-        )
-        publicados.append(jogo)
+            if not construtor(jogo, base / jogo["slug"] / "jogo"):
+                falhas += 1
+                continue
 
-    (SAIDA / "index.html").write_text(montar_galeria(publicados), encoding="utf-8")
+            capa = jogo.get("capa")
+            if capa and (jogo["pasta"] / capa).exists():
+                nome = chave_do_jogo(aluno, jogo) + Path(capa).suffix.lower()
+                shutil.copy2(jogo["pasta"] / capa, SAIDA / "capas" / nome)
+
+            (base / jogo["slug"] / "index.html").write_text(
+                montar_pagina_jogo(aluno, jogo), encoding="utf-8"
+            )
+            jogos_ok.append(jogo)
+
+        if jogos_ok:
+            visivel = dict(aluno, jogos=jogos_ok)
+            base.mkdir(parents=True, exist_ok=True)
+            (base / "index.html").write_text(montar_loja(visivel), encoding="utf-8")
+            publicados.append(visivel)
+
+    (SAIDA / "index.html").write_text(montar_indice(publicados), encoding="utf-8")
     # o GitHub Pages ignora pastas iniciadas por _ sem este arquivo
     (SAIDA / ".nojekyll").write_text("", encoding="utf-8")
 
-    resumo = f"\nsite/ pronto: {len(publicados)} de {len(jogos)} jogo(s) publicado(s)"
+    publicados_n = sum(len(a["jogos"]) for a in publicados)
+    resumo = f"\nsite/ pronto: {publicados_n} de {total} jogo(s) publicado(s)"
     if pulados:
         resumo += f", {pulados} pulado(s)"
     if falhas:

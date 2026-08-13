@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-PASTA_JOGOS = RAIZ / "jogos"
+PASTA_ATIVIDADES = RAIZ / "atividades"
 
 ENGINES = {"html", "construct", "pygame", "scratch"}
 CAMPOS = ["titulo", "autor", "turma", "engine", "descricao", "controles"]
@@ -233,12 +233,28 @@ def validar_jogo(pasta: Path) -> Problemas:
     return p
 
 
+def localizar_jogos() -> list[Path]:
+    """atividades/<curso>/<escola>/alunos/<aluno>/<jogo>/"""
+    encontrados = []
+    if not PASTA_ATIVIDADES.exists():
+        return encontrados
+    for curso in sorted(d for d in PASTA_ATIVIDADES.iterdir() if d.is_dir()):
+        for escola in sorted(d for d in curso.iterdir() if d.is_dir()):
+            alunos = escola / "alunos"
+            if not alunos.is_dir():
+                continue
+            for aluno in sorted(d for d in alunos.iterdir() if d.is_dir()):
+                for jogo in sorted(d for d in aluno.iterdir() if d.is_dir()):
+                    encontrados.append(jogo)
+    return encontrados
+
+
 def main() -> int:
-    if not PASTA_JOGOS.exists():
-        print(f"pasta {PASTA_JOGOS} nao existe")
+    if not PASTA_ATIVIDADES.exists():
+        print(f"pasta {PASTA_ATIVIDADES} nao existe")
         return 1
 
-    pastas = sorted(d for d in PASTA_JOGOS.iterdir() if d.is_dir())
+    pastas = localizar_jogos()
     if not pastas:
         print("nenhum jogo entregue ainda - nada a validar")
         return 0
@@ -247,13 +263,14 @@ def main() -> int:
     for pasta in pastas:
         p = validar_jogo(pasta)
         total_erros += len(p.erros)
+        rotulo = f"{pasta.parent.name}/{pasta.name}"
 
         if p.erros:
-            print(f"\n[X] {pasta.name}")
+            print(f"\n[X] {rotulo}")
         elif p.avisos:
-            print(f"\n[!] {pasta.name}")
+            print(f"\n[!] {rotulo}")
         else:
-            print(f"[ok] {pasta.name}")
+            print(f"[ok] {rotulo}")
 
         for e in p.erros:
             print(f"     ERRO: {e}")
