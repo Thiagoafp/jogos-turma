@@ -83,9 +83,40 @@ Copie de `modelos/` e preencha. Todos os campos são obrigatórios:
 
 Campos opcionais:
 
-- `"capa": "capa.png"` — imagem do card na galeria (proporção 16×10, até
-  25 MB). Sem ela, a galeria gera uma capa colorida com as iniciais.
+- `"capa": "capa.png"` — imagem do card na galeria (proporção 16×10). Sem
+  ela, a galeria gera uma capa colorida com as iniciais.
 - `"scratch_id": "123456789"` — só para Scratch, explicado abaixo.
+- `"midia": [...]` — a propaganda do jogo, explicada logo abaixo.
+
+## A propaganda do jogo
+
+Cada jogo pode ter **trailer, banners e prints**, que aparecem abaixo do jogo
+na página dele:
+
+```json
+"midia": [
+  { "arquivo": "trailer.mp4", "legenda": "30 segundos de gameplay" },
+  { "arquivo": "print-01.png", "legenda": "A fase do vulcão" },
+  { "arquivo": "banner.png",  "legenda": "" }
+]
+```
+
+**O limite é 25 MB de propaganda por jogo**, somando tudo. Esse orçamento é
+separado dos arquivos do jogo — um trailer pesado não rouba o espaço de que o
+jogo precisa para rodar.
+
+Formatos: `.mp4` e `.webm` para vídeo; `.png`, `.jpg`, `.webp`, `.gif` e
+`.svg` para imagem.
+
+Duas dicas que economizam muito espaço:
+
+- Exporte o vídeo em **720p**, não em 1080p. Numa página web ninguém nota a
+  diferença, e o arquivo cai pela metade.
+- Se usar `.mp4`, confirme que está em **H.264/AAC**. Outros codecs dentro de
+  um `.mp4` simplesmente não tocam em alguns navegadores — o aluno vê o vídeo
+  funcionando na máquina dele e quebrado no site.
+
+Trinta segundos de 720p bem comprimido cabem folgadamente nos 25 MB.
 
 Salve o arquivo em **UTF-8**. Se o acento aparecer como `Ã§`, está errado.
 

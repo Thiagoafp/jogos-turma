@@ -4,5 +4,11 @@
   "turma": "2026/1",
   "engine": "html",
   "descricao": "Exemplo em HTML/JavaScript. Pegue as moedas amarelas e desvie dos blocos vermelhos que caem cada vez mais rapido.",
-  "controles": "Setas ou WASD para mover. R para recomecar."
+  "controles": "Setas ou WASD para mover. R para recomecar.",
+  "midia": [
+    {
+      "arquivo": "promo-01.svg",
+      "legenda": "Sete moedas e a coisa ja fica seria."
+    }
+  ]
 }

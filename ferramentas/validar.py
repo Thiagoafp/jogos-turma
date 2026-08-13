@@ -33,6 +33,13 @@ CAMPOS_ESTUDIO = {
 LIMITE_ARQUIVO_MB = 25
 LIMITE_PASTA_MB = 60
 
+# Propaganda do jogo: trailer, banners, prints. Orcamento proprio, contado
+# separado dos arquivos do jogo - um trailer pesado nao pode roubar o espaco
+# que o jogo precisa para rodar.
+LIMITE_PROPAGANDA_MB = 25
+VIDEOS = {".mp4", ".webm"}
+MIDIA = IMAGENS | VIDEOS | {".gif"}
+
 
 class Problemas:
     def __init__(self):
@@ -204,10 +211,70 @@ def validar_conteudo(pasta: Path, dados: dict, p: Problemas) -> None:
             )
 
 
-def validar_tamanho(pasta: Path, p: Problemas) -> None:
+def validar_midia(pasta: Path, dados: dict, p: Problemas) -> set[Path]:
+    """Propaganda do jogo: trailer, banners e prints.
+
+    Devolve os arquivos declarados, para que validar_tamanho nao os conte
+    duas vezes: propaganda tem orcamento proprio.
+    """
+    midia = dados.get("midia")
+    if midia is None:
+        return set()
+
+    if not isinstance(midia, list):
+        p.erro('jogo.json: "midia" precisa ser uma lista [ ... ]')
+        return set()
+
+    declarados: set[Path] = set()
+    total = 0.0
+
+    for i, item in enumerate(midia, 1):
+        if not isinstance(item, dict) or not str(item.get("arquivo", "")).strip():
+            p.erro(f'jogo.json: item {i} de "midia" precisa ter um "arquivo"')
+            continue
+
+        arquivo = pasta / str(item["arquivo"])
+        if not arquivo.exists():
+            p.erro(f'a midia "{item["arquivo"]}" nao esta na pasta do jogo')
+            continue
+
+        extensao = arquivo.suffix.lower()
+        if extensao not in MIDIA:
+            p.erro(
+                f'"{item["arquivo"]}": formato {extensao} nao aceito. '
+                f"Use {', '.join(sorted(MIDIA))}"
+            )
+            continue
+
+        declarados.add(arquivo.resolve())
+        total += mb(arquivo)
+
+        if extensao == ".mp4":
+            p.aviso(
+                f'"{item["arquivo"]}": confirme que o video esta em H.264/AAC. '
+                "Outros codecs em .mp4 nao tocam em alguns navegadores."
+            )
+
+    if total > LIMITE_PROPAGANDA_MB:
+        p.erro(
+            f"a propaganda deste jogo soma {total:.1f} MB "
+            f"(limite {LIMITE_PROPAGANDA_MB} MB por jogo). Corte o trailer ou "
+            "exporte em resolucao menor - 720p costuma bastar."
+        )
+    elif total > LIMITE_PROPAGANDA_MB * 0.6:
+        # so avisa quando o orcamento comeca a apertar; abaixo disso e ruido
+        p.aviso(
+            f"propaganda em {total:.1f} de {LIMITE_PROPAGANDA_MB} MB - "
+            "esta perto do limite"
+        )
+
+    return declarados
+
+
+def validar_tamanho(pasta: Path, p: Problemas, ignorar: set[Path]) -> None:
     total = 0.0
     for arquivo in pasta.rglob("*"):
-        if not arquivo.is_file():
+        if not arquivo.is_file() or arquivo.resolve() in ignorar:
             continue
         tamanho = mb(arquivo)
         total += tamanho
@@ -218,8 +285,9 @@ def validar_tamanho(pasta: Path, p: Problemas) -> None:
             )
     if total > LIMITE_PASTA_MB:
         p.erro(
-            f"a pasta inteira tem {total:.1f} MB "
-            f"(limite {LIMITE_PASTA_MB} MB). Comprima imagens e sons."
+            f"os arquivos do jogo somam {total:.1f} MB "
+            f"(limite {LIMITE_PASTA_MB} MB, sem contar a propaganda). "
+            "Comprima imagens e sons."
         )
 
 
@@ -233,9 +301,11 @@ def validar_jogo(pasta: Path) -> Problemas:
         )
 
     dados = validar_metadados(pasta, p)
+    propaganda: set[Path] = set()
     if dados:
         validar_conteudo(pasta, dados, p)
-    validar_tamanho(pasta, p)
+        propaganda = validar_midia(pasta, dados, p)
+    validar_tamanho(pasta, p, ignorar=propaganda)
     return p
 
 

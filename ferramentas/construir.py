@@ -401,6 +401,30 @@ header.topo p { margin: .9rem 0 0; color: var(--suave); font-size: .9rem; }
 }
 .capa-estudio { position: relative; }
 
+/* propaganda do jogo: trailer e prints */
+.promo { margin-top: 2.5rem; }
+.promo h3 {
+  margin: 0 0 1rem; font-size: .8rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--magenta);
+}
+.promo figure { margin: 0 0 1rem; }
+.promo figcaption {
+  margin-top: .4rem; font-size: .8rem; color: var(--suave);
+  font-family: system-ui, sans-serif;
+}
+.promo .trailer video {
+  width: 100%; display: block; border-radius: 4px;
+  border: 1px solid var(--borda); background: #000;
+}
+.promo .prints {
+  display: grid; gap: .9rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.promo .prints img {
+  width: 100%; display: block; border-radius: 4px;
+  border: 1px solid var(--borda);
+}
+
 .vazio {
   text-align: center; color: var(--suave); padding: 4rem 1rem;
   letter-spacing: .1em;
@@ -521,6 +545,71 @@ def avatar_html(aluno: dict, prefixo: str, classe: str = "avatar") -> str:
         f'<div class="{classe}" style="background:linear-gradient(135deg,{a},{b})">'
         f'{esc(iniciais(aluno["nome"]))}</div>'
     )
+
+
+VIDEOS = {".mp4", ".webm"}
+
+
+def copiar_midia(aluno: dict, jogo: dict, destino: Path) -> list[dict]:
+    """Copia a propaganda do jogo (trailer, banners, prints) para o site."""
+    itens = jogo.get("midia")
+    if not isinstance(itens, list):
+        return []
+
+    publicados = []
+    for item in itens:
+        if not isinstance(item, dict):
+            continue
+        nome = str(item.get("arquivo", "")).strip()
+        if not nome:
+            continue
+        origem = jogo["pasta"] / nome
+        if not origem.exists():
+            print(f"      ! midia ausente: {nome}")
+            continue
+
+        destino.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(origem, destino / origem.name)
+        publicados.append({
+            "arquivo": f"midia/{origem.name}",
+            "video": origem.suffix.lower() in VIDEOS,
+            "legenda": str(item.get("legenda", "")),
+        })
+    return publicados
+
+
+def galeria_html(midia: list[dict]) -> str:
+    if not midia:
+        return ""
+
+    videos = [m for m in midia if m["video"]]
+    imagens = [m for m in midia if not m["video"]]
+    partes = []
+
+    for m in videos:
+        legenda = (
+            f'<figcaption>{esc(m["legenda"])}</figcaption>' if m["legenda"] else ""
+        )
+        partes.append(
+            f'<figure class="trailer"><video controls preload="metadata" '
+            f'src="{esc(m["arquivo"])}"></video>{legenda}</figure>'
+        )
+
+    if imagens:
+        tiras = "".join(
+            f'<figure><img src="{esc(m["arquivo"])}" alt="{esc(m["legenda"])}" '
+            f'loading="lazy">'
+            + (f'<figcaption>{esc(m["legenda"])}</figcaption>' if m["legenda"] else "")
+            + "</figure>"
+            for m in imagens
+        )
+        partes.append(f'<div class="prints">{tiras}</div>')
+
+    return f"""
+<div class="promo">
+  <h3>Trailer e imagens</h3>
+  {"".join(partes)}
+</div>"""
 
 
 def chave_do_jogo(aluno: dict, jogo: dict) -> str:
@@ -669,7 +758,7 @@ def montar_loja(aluno: dict) -> str:
 # ---------------------------------------------------------------- jogar
 
 
-def montar_pagina_jogo(aluno: dict, jogo: dict) -> str:
+def montar_pagina_jogo(aluno: dict, jogo: dict, midia: list[dict]) -> str:
     cor, rotulo = CORES_ENGINE.get(jogo.get("engine", ""), ("#888", "Jogo"))
     corpo = f"""
 <div class="barra">
@@ -685,7 +774,8 @@ def montar_pagina_jogo(aluno: dict, jogo: dict) -> str:
 
 <div class="palco">
   <iframe src="jogo/index.html" title="{esc(jogo.get('titulo', ''))}"
-          allow="autoplay; fullscreen; gamepad" allowfullscreen></iframe>
+          scrolling="no" allow="autoplay; fullscreen; gamepad"
+          allowfullscreen></iframe>
 </div>
 
 <div class="instrucoes">
@@ -693,6 +783,7 @@ def montar_pagina_jogo(aluno: dict, jogo: dict) -> str:
   <p>{esc(jogo.get('descricao', ''))}</p>
   <p style="font-size:.82rem;opacity:.7">Clique dentro do jogo antes de usar
      o teclado.</p>
+  {galeria_html(midia)}
 </div>
 <footer><a href="../index.html">Voltar</a></footer>
 """
@@ -751,8 +842,9 @@ def construir(pular_pygame: bool = False) -> int:
                 nome = chave_do_jogo(aluno, jogo) + Path(capa).suffix.lower()
                 shutil.copy2(jogo["pasta"] / capa, SAIDA / "capas" / nome)
 
+            midia = copiar_midia(aluno, jogo, base / jogo["slug"] / "midia")
             (base / jogo["slug"] / "index.html").write_text(
-                montar_pagina_jogo(aluno, jogo), encoding="utf-8"
+                montar_pagina_jogo(aluno, jogo, midia), encoding="utf-8"
             )
             jogos_ok.append(jogo)
 
