@@ -1,0 +1,8 @@
+{
+  "titulo": "Duelo dos Dados",
+  "autor": "Chris E.",
+  "turma": "Técnico em Programação de Jogos Digitais",
+  "engine": "html",
+  "descricao": "Dispute rodadas contra o computador e tente conseguir dois dados iguais. Quando os dois jogadores formam pares, o maior valor vence.",
+  "controles": "Clique ou toque no botão Jogar Dados para iniciar cada rodada."
+}

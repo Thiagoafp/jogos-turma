@@ -16,7 +16,7 @@ services:
   - type: web
     name: arcade-da-turma
     runtime: static
-    repo: https://github.com/SEU-USUARIO/jogos-turma   # ajuste apos criar o repo
+    repo: https://github.com/Thiagoafp/jogos-turma
     branch: publicado          # branch que o Actions atualiza a cada merge
     buildCommand: ""           # nada a construir: ja vem pronto
     staticPublishPath: .

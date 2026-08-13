@@ -1,0 +1,8 @@
+{
+  "titulo": "Martelo da Esperança",
+  "autor": "Richard A.",
+  "turma": "2ª Série",
+  "engine": "pygame",
+  "descricao": "Enfrente ondas de inimigos, proteja sua vida e avance usando o Martelo da Esperança.",
+  "controles": "A/D ou setas para mover. Shift para correr. Espaço para atacar. Esc para sair."
+}

@@ -1,0 +1,8 @@
+{
+  "titulo": "Cobrinha",
+  "autor": "Divino E.",
+  "turma": "Técnico em Programação de Jogos Digitais",
+  "engine": "scratch",
+  "descricao": "Versão do clássico jogo da cobrinha criada no Scratch. Controle a cobra, alcance as maçãs e acompanhe sua pontuação.",
+  "controles": "Use as quatro setas do teclado para mudar a direção da cobra."
+}

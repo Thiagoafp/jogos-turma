@@ -17,3 +17,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# dados locais do portal (codigos de acesso e sessoes)
+.portal/

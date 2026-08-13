@@ -1,0 +1,8 @@
+{
+  "titulo": "Jogo da Memória",
+  "autor": "Antonio C.",
+  "turma": "Técnico em Programação de Jogos Digitais",
+  "engine": "html",
+  "descricao": "Encontre os pares de animais em três níveis de dificuldade. O jogo registra o tempo, as tentativas e apresenta uma avaliação ao final da partida.",
+  "controles": "Clique ou toque nas cartas para virá-las e encontrar todos os pares."
+}

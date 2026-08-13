@@ -65,6 +65,39 @@ pygame (que é a parte lenta):
 python ferramentas/construir.py --sem-pygame
 ```
 
+## Portal de envio dos alunos
+
+O portal permite que cada aluno crie ou edite a identidade do próprio
+estúdio e envie jogos em ZIP. A entrega é validada antes de entrar na pasta
+do aluno e, quando aprovada, a galeria é reconstruída automaticamente.
+
+Com a galeria aberta na porta 8080, rode em outro terminal:
+
+```bash
+python ferramentas/portal.py
+```
+
+Abra <http://localhost:8081>. Na primeira execução, o terminal mostra um
+código individual para cada aluno. Esses códigos ficam somente em
+`.portal/acessos.json`, que é ignorado pelo Git. A lista pronta para o
+professor fica em `.portal/codigos-iniciais.txt`. Para invalidar os códigos
+anteriores e gerar uma lista nova:
+
+```bash
+python ferramentas/portal.py --redefinir-codigos
+```
+
+Para os alunos acessarem pela mesma rede local, descubra o IP do computador
+do professor e inicie com `--host 0.0.0.0`; eles então abrem
+`http://IP-DO-PROFESSOR:8081`. Essa modalidade é apropriada à rede da sala.
+Para publicar o portal na internet será necessário usar um serviço com
+autenticação e armazenamento persistente; o site estático do Render não
+consegue receber arquivos.
+
+No Windows, basta dar dois cliques em `iniciar-portal-alunos.cmd`. O iniciador
+mostra na tela os endereços que podem ser passados aos alunos e mantém o
+portal aberto para a rede da sala.
+
 ## Publicação
 
 Dois workflows, em `.github/workflows/`:

@@ -1,0 +1,8 @@
+{
+  "titulo": "Joguinho Dahora",
+  "autor": "Pablo P.",
+  "turma": "Técnico em Programação de Jogos Digitais",
+  "engine": "html",
+  "descricao": "Protótipo de plataforma futurista criado no GDevelop. Explore o laboratório com o prisioneiro cibernético, atravesse as plataformas e colete os frascos químicos.",
+  "controles": "Use as setas esquerda e direita para andar. Pressione a seta para cima ou Espaço para pular."
+}

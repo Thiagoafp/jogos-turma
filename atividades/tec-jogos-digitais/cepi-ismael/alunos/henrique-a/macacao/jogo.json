@@ -1,0 +1,8 @@
+{
+  "titulo": "Macacão",
+  "autor": "Henrique A.",
+  "turma": "Técnico em Programação de Jogos Digitais",
+  "engine": "construct",
+  "descricao": "Protótipo de jogo de plataforma criado no Construct 3. Controle o macaco, corra pelo cenário e supere os obstáculos.",
+  "controles": "Use A e D para andar para a esquerda e para a direita. Pressione W para pular."
+}
